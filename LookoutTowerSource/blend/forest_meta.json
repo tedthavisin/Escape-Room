@@ -1,0 +1,43 @@
+{
+ "trees": {
+  "Pine_A": {
+   "height": 21.0
+  },
+  "Pine_B": {
+   "height": 16.0
+  },
+  "Pine_C": {
+   "height": 26.0
+  },
+  "Pine_D": {
+   "height": 10.0
+  },
+  "Pine_E": {
+   "height": 5.5
+  }
+ },
+ "stats": {
+  "Pine_A_LOD0": 2116,
+  "Pine_A_LOD1": 497,
+  "Pine_A_LOD2": 27,
+  "Pine_B_LOD0": 1776,
+  "Pine_B_LOD1": 419,
+  "Pine_B_LOD2": 27,
+  "Pine_C_LOD0": 2042,
+  "Pine_C_LOD1": 479,
+  "Pine_C_LOD2": 27,
+  "Pine_D_LOD0": 1496,
+  "Pine_D_LOD1": 347,
+  "Pine_D_LOD2": 27,
+  "Pine_E_LOD0": 940,
+  "Pine_E_LOD1": 227,
+  "Pine_E_LOD2": 27,
+  "Snag_A": 407,
+  "Stump_A": 90,
+  "Log_A": 80,
+  "Rock_A": 80,
+  "Rock_B": 80,
+  "Rock_C": 80,
+  "Rock_D": 20
+ }
+}

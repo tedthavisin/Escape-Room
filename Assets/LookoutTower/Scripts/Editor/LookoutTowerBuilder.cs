@@ -34,12 +34,14 @@ namespace LookoutTower.EditorTools
         public const string TowerPrefabPath = PrefabDir + "/LookoutTower.prefab";
         public const string ScenePath = SceneDir + "/LookoutTower_ForestClearing.unity";
 
-        internal const float FloorY = 10.5f;     // top of the cab floor / catwalk
+        internal const float FloorY = 30.5f;     // top of the cab floor / catwalk (100 ft)
+        internal const float LowTopY = 28.1f;    // top of the switchback stairs; the steep ladder climbs the last 2.4 m
+        internal const int LowFlights = 20;      // switchback flights, 8 risers each
 
         /// <summary>Bump when the builder's output changes, so older builds get offered a rebuild.</summary>
-        public const int BuilderVersion = 3;
+        public const int BuilderVersion = 7;
         /// <summary>One line for the rebuild prompt: what changed in this builder version.</summary>
-        public const string WhatChanged = "bigger trapdoor hatch, roomier cab layout, walkability test";
+        public const string WhatChanged = "100 ft tower, 7.3 m cab, 20 stair flights, edge ridge, sky matched to fog, Conifers [BOTD] trees";
         static string StampPath => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "LookoutTowerSource", "builder_version.txt"));
 
         public static int BuiltVersion()
@@ -259,7 +261,7 @@ namespace LookoutTower.EditorTools
                 sky.EnableKeyword("_MAPPING_LATITUDE_LONGITUDE_LAYOUT");
                 sky.DisableKeyword("_MAPPING_6_FRAMES_LAYOUT");
                 sky.SetFloat("_ImageType", 0f);
-                sky.SetFloat("_Exposure", 2.2f);   // sky texture horizon (16,20,28) x 2.2 linear ~= FogColor
+                sky.SetFloat("_Exposure", 1.2f);   // measured: below-horizon sky then renders exactly FogColor (28,34,46), so the terrain edge vanishes into it
                 sky.SetFloat("_Rotation", 0f);
                 EditorUtility.SetDirty(sky);
             }
@@ -614,6 +616,39 @@ namespace LookoutTower.EditorTools
             { "Pine_A", 21f }, { "Pine_B", 16f }, { "Pine_C", 26f }, { "Pine_D", 10f }, { "Pine_E", 5.5f },
         };
 
+        const string BotdPrefabDir = "Assets/Forst/Conifers [BOTD]/Render Pipeline Support/URP/Prefabs";
+
+        /// <summary>Prefab variants of the Conifers [BOTD] URP trees (each with a trunk collider), weighted for the
+        /// forest. Empty when the pack isn't imported.</summary>
+        static List<(GameObject prefab, float weight, bool young)> BuildBotdConifers()
+        {
+            var list = new List<(GameObject, float, bool)>();
+            var specs = new (string name, float weight, bool young, float radius)[]
+            {
+                ("Tall", 0.40f, false, 0.35f), ("Medium", 0.35f, false, 0.28f), ("Small", 0.15f, true, 0.15f), ("Bare", 0.10f, false, 0.32f),
+            };
+            foreach (var sp in specs)
+            {
+                var src = AssetDatabase.LoadAssetAtPath<GameObject>($"{BotdPrefabDir}/PF Conifer {sp.name} BOTD URP.prefab");
+                if (src == null) continue;
+                var inst = (GameObject)PrefabUtility.InstantiatePrefab(src);
+                inst.name = "Tree_Conifer_" + sp.name;
+                if (inst.GetComponent<Collider>() == null)
+                {
+                    var cap = inst.AddComponent<CapsuleCollider>();
+                    cap.radius = sp.radius;
+                    cap.height = 5f;
+                    cap.center = new Vector3(0f, 2.5f, 0f);
+                }
+                // Not batching-static: the CTI wind shaders sway each tree about its own pivot.
+                GameObjectUtility.SetStaticEditorFlags(inst, StaticEditorFlags.OccludeeStatic);
+                var variant = PrefabUtility.SaveAsPrefabAsset(inst, $"{NatureDir}/Tree_Conifer_{sp.name}.prefab");
+                Object.DestroyImmediate(inst);
+                if (variant != null) list.Add((variant, sp.weight, sp.young));
+            }
+            return list;
+        }
+
         static GameObject CopyRenderer(Transform src, Transform parent, string name)
         {
             var go = new GameObject(name);
@@ -658,6 +693,11 @@ namespace LookoutTower.EditorTools
                 float w = kv.Key == "Pine_A" ? 0.3f : kv.Key == "Pine_B" ? 0.27f : kv.Key == "Pine_C" ? 0.18f : kv.Key == "Pine_D" ? 0.15f : 0.1f;
                 set.trees.Add((prefab, w, kv.Key == "Pine_D" || kv.Key == "Pine_E"));
             }
+
+            // Prefer the Conifers [BOTD] pack (Asset Store, forst) when it's in the project: much more natural trees,
+            // with their own LODs, billboards and wind shaders. Falls back to the generated pines above without it.
+            var botd = BuildBotdConifers();
+            if (botd.Count > 0) set.trees = botd;
 
             GameObject Simple(string srcName, string prefabName, Action<GameObject> colliders)
             {
@@ -762,7 +802,7 @@ namespace LookoutTower.EditorTools
             probeGo.transform.position = new Vector3(0f, FloorY + 1.2f, 0f);
             var probe = probeGo.AddComponent<ReflectionProbe>();
             probe.mode = UnityEngine.Rendering.ReflectionProbeMode.Baked;
-            probe.size = new Vector3(4.1f, 2.4f, 4.1f);
+            probe.size = new Vector3(7.1f, 2.8f, 7.1f);
             probe.boxProjection = true;
             probe.resolution = 128;
 
@@ -855,6 +895,8 @@ namespace LookoutTower.EditorTools
             float h = Mathf.Lerp(flat, Hills(x, z) - Hills(0f, 0f), t);
             float pd = PathDist(x, z);
             if (pd < 3f) h -= 0.12f * (1f - pd / 3f) * t;
+            // ridge round the map edge, so from the high cab the border reads as distant hills lost in the fog
+            h += 12f * Smooth(45f, 100f, Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)));
             return h;
         }
 
@@ -987,7 +1029,7 @@ namespace LookoutTower.EditorTools
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             RenderSettings.fogColor = FogColor;
-            RenderSettings.fogDensity = 0.022f;
+            RenderSettings.fogDensity = 0.032f;
             RenderSettings.reflectionIntensity = 0.6f;
 
             var lighting = new LightingSettings { name = "LookoutTower_Lighting" };
@@ -1033,6 +1075,14 @@ namespace LookoutTower.EditorTools
             // --- forest
             var rnd = new System.Random(20261112);
             float R() => (float)rnd.NextDouble();
+            // wind for the Conifers [BOTD] shaders (they read a global set by this WindZone; harmless without the pack)
+            var windPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Forst/CTI Runtime Components/CTI Runtime Components URP 14plus/Prefabs/CTI Windzone URP.prefab");
+            if (windPrefab != null)
+            {
+                var wind = (GameObject)PrefabUtility.InstantiatePrefab(windPrefab);
+                wind.transform.SetParent(env, false);
+                wind.transform.rotation = Quaternion.Euler(0f, 40f, 0f);
+            }
             var forest = new GameObject("Forest").transform;
             forest.SetParent(env, false);
             var placed = new List<Vector3>();
@@ -1173,16 +1223,16 @@ namespace LookoutTower.EditorTools
 
         static readonly View[] Views =
         {
-            new View("01_path_approach", new Vector3(-2.5f, 1.7f, -21f), new Vector3(0f, 8.5f, 0f), 62f),
-            new View("02_exterior_high", new Vector3(14f, 10f, -17f), new Vector3(0f, 10f, 0f), 55f),
-            new View("03_cab_interior", new Vector3(1.4f, FloorY + 1.62f, -1.55f), new Vector3(-1.1f, FloorY + 0.5f, 0.9f), 75f),
-            new View("04_cab_interior_desk", new Vector3(-1.2f, FloorY + 1.6f, -1.3f), new Vector3(1.6f, FloorY + 0.7f, 0.2f), 75f),
-            new View("05_view_from_cab", new Vector3(0.2f, FloorY + 1.65f, 0.6f), new Vector3(0.6f, FloorY - 1.5f, 30f), 75f),
-            new View("06_catwalk", new Vector3(2.75f, FloorY + 1.6f, -2.75f), new Vector3(-2.6f, FloorY + 1.0f, 2.2f), 75f),
+            new View("01_path_approach", new Vector3(-2.5f, 1.7f, -26f), new Vector3(0f, 22f, 0f), 62f),
+            new View("02_exterior_high", new Vector3(20f, 24f, -34f), new Vector3(0f, 26f, 0f), 55f),
+            new View("03_cab_interior", new Vector3(2.4f, FloorY + 1.62f, -2.8f), new Vector3(-1.1f, FloorY + 0.5f, 1.5f), 75f),
+            new View("04_cab_interior_desk", new Vector3(-0.5f, FloorY + 1.6f, -1.5f), new Vector3(3.1f, FloorY + 0.7f, 0.0f), 75f),
+            new View("05_view_from_cab", new Vector3(0.2f, FloorY + 1.65f, 2.6f), new Vector3(0.6f, FloorY - 12f, 60f), 75f),
+            new View("06_catwalk", new Vector3(4.2f, FloorY + 1.6f, -4.2f), new Vector3(-4.0f, FloorY + 1.0f, 3.0f), 75f),
             new View("07_stairs_inside", new Vector3(-1.2f, 1.65f, -1.6f), new Vector3(-0.9f, 4.2f, 1.0f), 75f),
-            new View("08_aerial", new Vector3(34f, 26f, -40f), new Vector3(0f, 6f, 0f), 50f),
+            new View("08_aerial", new Vector3(60f, 45f, -75f), new Vector3(0f, 15f, 0f), 50f),
             new View("09_hatch_from_cab", new Vector3(-0.35f, FloorY + 1.6f, 0.95f), new Vector3(-1.24f, FloorY - 0.9f, -0.75f), 75f, true),
-            new View("10_ladder_up_through_hatch", new Vector3(-1.24f, 8.1f + 1.55f, -1.45f), new Vector3(-1.24f, FloorY + 1.2f, 0.35f), 75f, true),
+            new View("10_ladder_up_through_hatch", new Vector3(-1.24f, LowTopY + 1.55f, -1.45f), new Vector3(-1.24f, FloorY + 1.2f, 0.35f), 75f, true),
         };
 
         public static string CaptureScreenshots()

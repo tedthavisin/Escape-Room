@@ -1,7 +1,7 @@
 # Fire Lookout Tower (escape room set)
 
-A ~14 m timber fire lookout in a night-time forest clearing, built for Unity 6 URP and sized for Quest 3
-(the whole tower is ~10k triangles, the cab furniture ~5k).
+A ~100 ft (30.5 m to the cab floor) timber fire lookout in a night-time forest clearing, built for Unity 6 URP and sized for Quest 3
+(the whole tower is ~18k triangles, the cab furniture ~5k).
 
 ## Build it
 
@@ -38,12 +38,12 @@ and back down, and tells you where it gets stuck. It also runs at the end of Bui
 
 ## The tower, in numbers
 
-- Cab floor / catwalk at **10.5 m**. Cab is **4.3 × 4.3 m** outside (L-4 style), 2.35 m ceiling.
-- Stairs: six 34° flights with landings every 1.35 m, then a 63° ship's-ladder flight through a 0.82 × 1.6 m hatch.
+- Cab floor / catwalk at **30.5 m (100 ft)**. Cab is **7.3 × 7.3 m** (24 ft) outside, 2.75 m ceiling, 1 m wide catwalk, five window bays per wall. Legs taper from 9.6 m apart at the ground to 6.4 m at the top.
+- Stairs: twenty 36° switchback flights (8 risers each) with landings every 1.4 m, then a 63° ship's-ladder flight through a 0.82 × 1.6 m hatch.
   The hatch is long because a 1.8 m player's head reaches floor level almost at the foot of that flight;
   `_hatch_south_edge()` in `build_tower.py` works the size out from the player's height.
-- Cab layout keeps a 0.75 m+ walkway round the fire finder (centre of the cab) and to the stove, desk,
-  cupboard, cot and map board. The chair is pushed in under the desk to keep the east side clear.
+- Furniture hugs the walls (desk east, stove NE, cot NW, cupboard SE, map board south) so the middle of the cab
+  is open for puzzles, with a 0.75 m+ walkway round the fire finder and to every piece.
 - Windows: 11 top-hinged sashes (3 per wall, the south middle bay is the door).
 - Coordinates: tower origin is the ground at the centre of the tower; +Z is north; the door faces south.
 
@@ -72,7 +72,7 @@ trapdoor.Unlock(); trapdoor.Open();    // e.g. when a puzzle is solved
 - For best performance, bake lighting (Window ▸ Rendering ▸ Lighting ▸ Generate). The scene is set up for
   Subtractive mixed lighting; the tower and terrain are lightmap-static, and trees and props use light probes.
 - Post-processing (vignette/bloom) is for desktop. Trim it for VR.
-- Fog density is 0.022 (exp²). The sky texture's horizon matches the fog colour, so change both together.
+- Fog density is 0.032 (exp²). The sky below the horizon is the horizon colour, and the skybox exposure (1.2) is set so it renders exactly the fog colour; change fog colour, sky texture and exposure together.
 
 ## Troubleshooting
 

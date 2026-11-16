@@ -1,24 +1,18 @@
-[00:00:57] Build started (Unity 6000.5.9f1, pipeline PC_RPAsset)
-[00:00:57] Preparing
-[00:00:57] Materials
-[00:00:57] LookoutTower.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 18 children, first 'Cab_Roof' pos (0.00, 0.00, 0.00) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
-[00:00:57] CabProps.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 14 children, first 'Binoculars' pos (-1.87, 11.26, 0.52) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
-[00:00:57] Forest.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 22 children, first 'Log_A' pos (0.00, 0.00, 0.00) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
-[00:00:57] Cab props
-[00:00:58] Trees and rocks
-[00:00:58] Lookout tower prefab
-[00:00:58] Forest clearing scene
-[00:01:00] Build succeeded
-[00:01:00] Walkability test
-[00:01:00] WALKTEST Test scene: preview, door + trapdoor opened (2/2).
-[00:01:00] WALKTEST PASS  player 1.80 m: all 52 waypoints reached (33 s of walking)
-[00:01:00] WALKTEST PASS  player 1.15 m: all 52 waypoints reached (33 s of walking)
-[00:01:00] Build finished
-[00:05:22] WALKTEST Test scene: preview, door + trapdoor opened (2/2).
-[00:05:22] WALKTEST PASS  player 1.80 m: all 52 waypoints reached (33 s of walking)
-[00:05:22] WALKTEST PASS  player 1.15 m: all 52 waypoints reached (33 s of walking)
-[00:05:22] WALKTEST Headroom: capsules up to 2.20 m tall get through the hatch; a 2.25 m capsule doesn't: STUCK on the way to 'foot of the ladder' (#1) at (-0.28, 8.10, -1.30)
-[00:05:22] WALKTEST OK    control: with the trapdoor shut the ladder is blocked, as it should be
-[00:05:46] Saved 8 screenshots to /Users/tedthavisin/COMP590/Escape Room/LookoutTowerSource/Screenshots
-[00:08:16] Saved 8 screenshots to /Users/tedthavisin/COMP590/Escape Room/LookoutTowerSource/Screenshots
-[00:09:35] Saved 10 screenshots to /Users/tedthavisin/COMP590/Escape Room/LookoutTowerSource/Screenshots
+[14:47:10] Build started (Unity 6000.5.9f1, pipeline PC_RPAsset)
+[14:47:10] Preparing
+[14:47:11] Materials
+[14:47:12] LookoutTower.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 26 children, first 'Cab_Roof' pos (0.00, 0.00, 0.00) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
+[14:47:12] CabProps.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 14 children, first 'Binoculars' pos (-3.35, 31.26, 0.52) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
+[14:47:12] Forest.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 22 children, first 'Log_A' pos (0.00, 0.00, 0.00) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
+[14:47:12] Cab props
+[14:47:12] Trees and rocks
+[14:47:13] Lookout tower prefab
+[14:47:13] Forest clearing scene
+[14:47:14] Build succeeded
+[14:47:14] Walkability test
+[14:47:14] WALKTEST Test scene: preview, door + trapdoor opened (2/2).
+[14:47:14] WALKTEST PASS  player 1.80 m: all 109 waypoints reached (91 s of walking)
+[14:47:14] WALKTEST PASS  player 1.15 m: all 109 waypoints reached (91 s of walking)
+[14:47:14] WALKTEST Headroom: capsules up to 2.20 m tall get from the top landing up through the hatch (at 2.25 m: STUCK on the way to 'foot of the ladder' (#1) at (-0.28, 28.10, -1.30))
+[14:47:14] WALKTEST OK    control: with the trapdoor shut the ladder is blocked, as it should be
+[14:47:14] Build finished

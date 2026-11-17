@@ -3641,6 +3641,7 @@ GameObject:
   - component: {fileID: 9011589521095604549}
   - component: {fileID: 855939745012045563}
   - component: {fileID: 4854316061092066434}
+  - component: {fileID: 1797148666142759713}
   m_Layer: 0
   m_Name: Window_N2
   m_TagString: Untagged
@@ -3801,6 +3802,50 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   onLockedAttempt:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1797148666142759713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7144932693623170357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ca105c24039c49618797c4b89ec2112, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LookoutTower.BreathFogWindow
+  code: 2741
+  writingCentre: {x: 0, y: -0.24}
+  digitHeight: 0.11
+  strokeWidth: 0.017
+  centreGap: 0.045
+  head: {fileID: 0}
+  mouthOffset: {x: 0, y: -0.09, z: 0.07}
+  reach: 0.5
+  buildRateNear: 1.6
+  buildRateFar: 0.5
+  spreadNear: 0.08
+  spreadFar: 0.2
+  fogColour: {r: 0.9, g: 0.92, b: 0.95, a: 1}
+  maxOpacity: 0.75
+  writingClarity: 0.92
+  lingerSeconds: 4
+  evaporateSeconds: 10
+  revealCoverage: 0.6
+  texelsPerMetre: 220
+  fogMaterialTemplate: {fileID: 0}
+  glassCentre: {x: 0, y: -0.71099854, z: -0.0224998}
+  glassSize: {x: 1.212, y: 1.302002}
+  glassRight: {x: 1, y: 0, z: 0}
+  glassUp: {x: 0, y: 1, z: 0}
+  interiorNormal: {x: -0, y: -0, z: -1}
+  surfaceOffset: 0.004
+  onRevealed:
+    m_PersistentCalls:
+      m_Calls: []
+  onCodeVisibleChanged:
     m_PersistentCalls:
       m_Calls: []
 --- !u!1 &7659693017752415822

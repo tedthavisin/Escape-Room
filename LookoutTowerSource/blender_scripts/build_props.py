@@ -10,10 +10,9 @@ import build_tower as T
 F = T.FLOOR_Z
 DESK_Z = 0.76
 DESK_HL = 0.55          # desk half-length (along the east wall)
-DESK_POS = (1.70, -0.20)
-# Layout note: the cab is only 4.06 m across, so the furniture is placed to keep a 0.75 m+ walkway
-# (a 0.6 m capsule plus skin) all the way round the fire finder and from the hatch to every piece.
-# Check with analysis/search.py-style footprints before moving things.
+DESK_POS = (3.18, -0.20)
+# Layout note: the cab is 7.06 m across inside. Furniture hugs the walls so the middle stays open for the
+# puzzles, with a 0.75 m+ walkway (a 0.6 m capsule plus skin) round the fire finder and from the hatch to every piece.
 PLACEMENTS = {}
 
 
@@ -88,7 +87,7 @@ def cot():
     m.box((0.36, -0.31, 0.53), (0.88, 0.31, 0.6), "M_Wool")
     m.box((-0.3, -0.355, 0.53), (0.33, 0.335, 0.545), "M_Wool")
     m.box((-0.3, -0.37, 0.24), (0.33, -0.355, 0.545), "M_Wool")
-    return [place(m, (-1.0, 1.58, F))]
+    return [place(m, (-2.4, 3.10, F))]
 
 
 def stove():
@@ -114,7 +113,7 @@ def stove():
     m.cyl((-0.06, -0.445, 0.3), (-0.06, -0.455, 0.3), 0.035, segs=12, mat=I)   # draft vent
     for z in (0.29, 0.46):
         m.cyl((-0.175, -0.43, z - 0.02), (-0.175, -0.43, z + 0.02), 0.01, segs=6, mat=I)
-    return [place(m, (1.55, 1.55, F))]
+    return [place(m, (T.STOVE[0], T.STOVE[1], F))]
 
 
 def desk_and_chair():
@@ -225,7 +224,7 @@ def map_board():
     for (px, pz) in ((-0.2, 0.75), (0.12, 0.6), (0.3, 0.82), (-0.05, 0.48)):
         m.cyl((px, y, pz), (px, y + 0.012, pz), 0.006, segs=6, mat="M_RedPaint")
         m.cyl((px, y + 0.012, pz), (px, y + 0.02, pz), 0.011, segs=8, mat="M_RedPaint")
-    return [place(m, (-1.25, -T.CIN, F))]
+    return [place(m, (-2.2, -T.CIN, F))]
 
 
 def cupboard():
@@ -245,7 +244,7 @@ def cupboard():
     it.tube_path([(0.07, 0, 1.02), (0.13, 0, 1.0), (0.13, 0, 0.92), (0.08, 0, 0.9)], 0.008, segs=5, mat="M_PaintedMetal")
     it.box((0.18, -0.15, 0.85), (0.36, 0.1, 0.885), "M_BookCover", grain="y")
     it.box((0.19, -0.13, 0.885), (0.35, 0.08, 0.915), "M_Paper", grain="y")
-    pos = (1.59, -1.755, F)
+    pos = (3.06, -3.30, F)
     return [place(m, pos), place(it, pos)]
 
 
@@ -256,7 +255,7 @@ def firewood():
     for i, (y, z, r) in enumerate(logs):
         L = 0.42 + 0.03 * math.sin(i * 1.7)
         m.cyl((-L / 2, y, z), (L / 2, y, z), r, segs=9, mat="M_Bark", cap_mat="M_Timber", ang0=i * 0.7)
-    return [place(m, (0.92, 1.75, F), rot_deg=4)]
+    return [place(m, (1.9, 3.10, F), rot_deg=4)]
 
 
 def main(outdir, reset=True):

@@ -1,7 +1,7 @@
 {
- "floor_z": 10.499999999999998,
- "cab_half": 2.15,
- "cab_inner": 2.03,
+ "floor_z": 30.5,
+ "cab_half": 3.65,
+ "cab_inner": 3.53,
  "hatch": {
   "x0": -1.65,
   "x1": -0.8300000000000001,
@@ -12,16 +12,18 @@
   "w": 0.86,
   "h": 2.0
  },
- "sill_z": 11.449999999999998,
- "win_top": 12.749999999999998,
- "ceil_z": 12.849999999999998,
- "eave_z": 12.95,
- "walk": 3.15,
+ "sill_z": 31.45,
+ "win_top": 32.9,
+ "ceil_z": 33.25,
+ "eave_z": 33.35,
+ "walk": 4.65,
  "stove": [
-  1.55,
-  1.55
+  3.03,
+  3.03
  ],
- "low_top": 8.1,
+ "low_top": 28.1,
+ "n_low": 20,
+ "rise": 0.175625,
  "lanes": {
   "A": [
    -1.65,
@@ -34,23 +36,31 @@
  },
  "land_y": 0.86,
  "stats": {
-  "Tower_Frame": 2772,
-  "Tower_Stairs": 2616,
-  "Cab_Shell": 1638,
-  "Cab_Roof": 918,
+  "Tower_Frame": 3932,
+  "Tower_Stairs": 7824,
+  "Cab_Shell": 2198,
+  "Cab_Roof": 1110,
   "Door": 432,
   "Trapdoor": 308,
   "Window_S0": 132,
-  "Window_S2": 132,
+  "Window_S1": 132,
+  "Window_S3": 132,
+  "Window_S4": 132,
   "Window_N0": 132,
   "Window_N1": 132,
   "Window_N2": 132,
+  "Window_N3": 132,
+  "Window_N4": 132,
   "Window_E0": 132,
   "Window_E1": 132,
   "Window_E2": 132,
+  "Window_E3": 132,
+  "Window_E4": 132,
   "Window_W0": 132,
   "Window_W1": 132,
   "Window_W2": 132,
-  "COL_Static": 780
+  "Window_W3": 132,
+  "Window_W4": 132,
+  "COL_Static": 1212
  }
 }

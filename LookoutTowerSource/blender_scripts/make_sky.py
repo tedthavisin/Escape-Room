@@ -29,8 +29,11 @@ t = np.clip(elev / (math.pi / 2), 0, 1) ** 0.45
 sky = FOG[None, None, :] * (1 - t[..., None]) + ZEN[None, None, :] * t[..., None]
 haze = np.exp(-np.maximum(elev, 0) / 0.08)[..., None]
 sky = sky * (1 - haze * 0.6) + HAZE * haze * 0.6
+# Below the horizon the sky holds the horizon colour exactly, so there's no step at the horizon: from the
+# high cab you look out past the terrain edge, and that band must match the fogged ground in front of it.
+HORIZON = FOG * 0.4 + HAZE * 0.6
 below = elev < 0
-sky[below] = FOG * 0.9
+sky[below] = HORIZON
 
 # clouds (periodic noise wraps horizontally), stretched along longitude
 n1 = fft_noise(H, W, 3.0, 5, sx=0.35, sy=1.0)

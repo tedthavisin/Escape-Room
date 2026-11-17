@@ -71,7 +71,7 @@ def branch_specs(h, seed, cb, Rmax):
     base_sp = 0.55 + 0.01 * h
     while z < h - 0.9:
         f = max(0.0, (h - z) / (h - cb))
-        R = max(0.3, Rmax * f ** 0.95)
+        R = max(0.5, Rmax * f ** 0.95)
         k = int(round(5 + 4 * f)) if f > 0.15 else 4
         phase += 2.39996
         for b in range(k):
@@ -110,10 +110,21 @@ def pine(name, h, seed, cb_frac, spread, lod):
             branch(m, base, ang, L, 3, [0.3, 0.95, 0.7, 0.0], droop, rngb, wfac=0.5, tilt=tilt)
         elif rank == 0:
             branch(m, base, ang, L * 1.04, 2, [0.4, 1.0, 0.0], droop, rngb, wfac=0.85, tilt=tilt)
-    # leader / top spike
-    top = vec(0, 0, h)
-    m.cyl(vec(0, 0, h - 1.4), top + vec(0, 0, 0.3), 0.36, 0.01, segs=6 if lod == 0 else 4, mat="M_Needles",
-          caps=(True, False))
+    # Top: two crossed, alpha-cut needle cards tapering to a point, so the crown ends in a soft spire of
+    # foliage. (A solid needle-textured cone here read as a dark "dunce cap" on every tree.)
+    # Stacked, shrinking triangles give the same serrated outline as the branch tiers below.
+    z0, W0, n_t = h - 3.4, 1.15, 4
+    step = (h + 0.1 - 0.9 - z0) / (n_t - 1)
+    a0 = rng.uniform(0, math.pi)
+    for k in range(2 if lod == 0 else 1):
+        a = a0 + k * math.pi / 2
+        d = vec(math.cos(a), math.sin(a), 0)
+        for j in range(n_t):
+            zb = z0 + j * step
+            w = W0 * (1 - 0.7 * j / (n_t - 1))
+            ht = 0.9 + 0.1 * j
+            bl, br, tp = vec(0, 0, zb) + d * (w / 2) + vec(0, 0, -0.15), vec(0, 0, zb) - d * (w / 2) + vec(0, 0, -0.15), vec(0, 0, zb + ht)
+            m.poly([bl, tp, br], [(0, w / 2), (ht, 0), (0, -w / 2)], "M_Needles")
     if lod == 0:
         for k in range(int(rng.integers(5, 10))):
             z = rng.uniform(1.6, max(1.8, cb - 0.2))

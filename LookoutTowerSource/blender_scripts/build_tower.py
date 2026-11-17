@@ -7,22 +7,24 @@ from bgeo import MB, vec, register_material, reset_scene, export_fbx, setup_prev
 
 # ------------------------------------------------------------------ dimensions
 PIER, PIER_TOP, PIER_BOT = 0.7, 0.35, -0.6
-LEG = 0.25
-LEG_BASE, LEG_TOP, LEG_TOP_Z = 3.0, 1.95, 10.02
+LEG = 0.36
+LEG_BASE, LEG_TOP, LEG_TOP_Z = 4.8, 3.2, 30.02     # 100 ft (30.5 m) tower
 BEAM_H, JOIST_H, JOIST_W, DECK_T = 0.25, 0.20, 0.06, 0.03
-FLOOR_Z = LEG_TOP_Z + BEAM_H + JOIST_H + DECK_T          # 10.50
-CAB = 2.15            # outer half-width of cab walls
+FLOOR_Z = LEG_TOP_Z + BEAM_H + JOIST_H + DECK_T          # 30.50 m = 100 ft
+CAB = 3.65            # outer half-width of cab walls (7.3 m = 24 ft square)
 WALL_T = 0.12
 CIN = CAB - WALL_T    # 2.03 interior half-width
 SILL_Z = FLOOR_Z + 0.95
-WIN_TOP = SILL_Z + 1.30
-CEIL_Z = FLOOR_Z + 2.35
-EAVE_Z = FLOOR_Z + 2.45
-ROOF_OVER = 0.5
+WIN_TOP = SILL_Z + 1.45
+CEIL_Z = FLOOR_Z + 2.75
+EAVE_Z = FLOOR_Z + 2.85
+ROOF_OVER = 1.0
 PITCH = math.radians(27)
-WALK = 3.15           # catwalk outer half-width
+WALK = 4.65           # catwalk outer half-width (1 m wide)
+STOVE = (3.03, 3.03)  # stove / stovepipe position (NE corner)
 RAIL_H = 1.05
-GIRTS = [0.6, 3.0, 5.4, 7.8, 9.82]
+_N_PANELS = 6
+GIRTS = [round(0.6 + i * (LEG_TOP_Z - 0.2 - 0.6) / _N_PANELS, 3) for i in range(_N_PANELS + 1)]
 
 # stairs
 POST_X = [-1.72, -0.76, 0.20]
@@ -31,9 +33,9 @@ POST = 0.14
 LANE_A = (POST_X[0] + POST / 2, POST_X[1] - POST / 2)     # west lane  (-1.65, -0.83)
 LANE_B = (POST_X[1] + POST / 2, POST_X[2] - POST / 2)     # east lane  (-0.69, 0.13)
 LAND_Y = 0.86          # landings occupy |y| in [0.86, 1.72]
-N_LOW = 6
+N_LOW = 20             # must be even: the last low flight ends on the south landing
 RISERS = 8
-LOW_TOP = 8.10
+LOW_TOP = FLOOR_Z - 2.40   # top of the switchbacks; the steep ship's ladder climbs the last 2.4 m
 RISE = LOW_TOP / (N_LOW * RISERS)          # 0.16875
 GOING = (2 * LAND_Y) / (RISERS - 1)         # 0.2457
 STEEP_RISERS = 12
@@ -61,7 +63,9 @@ HATCH = dict(x0=LANE_A[0], x1=LANE_A[1], y0=_hatch_south_edge(),
 
 # door / windows
 DOOR_W, DOOR_H = 0.86, 2.0
-BAY_W, MULL = 1.30, 0.10
+N_BAYS, MULL = 5, 0.10
+BAY_W = (2 * CAB - (N_BAYS + 1) * MULL) / N_BAYS
+DOOR_BAY = N_BAYS // 2
 
 MATS = {
     "M_Timber": ("Timber", 1.0), "M_PlanksWeathered": ("PlanksWeathered", 2.0),
@@ -138,7 +142,8 @@ def build_frame():
         m.box((x - 0.125, -WALK + 0.03, LEG_TOP_Z), (x + 0.125, WALK - 0.03, LEG_TOP_Z + BEAM_H), "M_Timber", grain="y")
     # joists (along X), trimmed around the hatch
     jz0, jz1 = LEG_TOP_Z + BEAM_H, LEG_TOP_Z + BEAM_H + JOIST_H
-    ys = [-3.0 + 0.4 * i for i in range(16)]
+    _n = round(2 * (WALK - 0.15) / 0.4) + 1
+    ys = [-(WALK - 0.15) + i * 2 * (WALK - 0.15) / (_n - 1) for i in range(_n)]
     hx0, hx1 = HATCH["x0"] - JOIST_W, HATCH["x1"] + JOIST_W
     oy0, oy1 = HATCH["y0"] - JOIST_W, HATCH["y1"] + JOIST_W      # opening incl. its headers
     for y in ys:
@@ -160,7 +165,7 @@ def build_frame():
         m.box((-WALK, sy * WALK, jz0 - 0.05), (WALK, sy * (WALK + RT), FLOOR_Z + 0.008), "M_Timber")
     # knee braces under the catwalk
     for sx, sy in corners:
-        lp = legpos(sx, sy, 8.95)
+        lp = legpos(sx, sy, LEG_TOP_Z - 1.5)
         m.beam(lp + vec(sx * 0.13, 0, 0), vec(sx * (WALK - 0.25), sy * LEG_TOP, jz0 - 0.02), 0.10, 0.14, "M_Timber",
                up=(0, 0, 1), extend=0.03)
         m.beam(lp + vec(0, sy * 0.13, 0), vec(sx * LEG_TOP, sy * (WALK - 0.25), LEG_TOP_Z - 0.02), 0.10, 0.14,
@@ -333,9 +338,9 @@ def wall_block(m, side, s0, s1, z0, z1, d0, d1, mat_out, mat_in, mat_edge, faces
 def bays(side):
     """Window bays along a side: list of (s0, s1, kind)."""
     out = []
-    for i in range(3):
+    for i in range(N_BAYS):
         s0 = -CAB + MULL + i * (BAY_W + MULL)
-        out.append((s0, s0 + BAY_W, "door" if (side == "S" and i == 1) else "window"))
+        out.append((s0, s0 + BAY_W, "door" if (side == "S" and i == DOOR_BAY) else "window"))
     return out
 
 
@@ -356,7 +361,7 @@ def build_cab(col):
         m.box((a, c, z0), (b, d, z1), "M_PlanksWeathered", grain="y")
         col.box((a, c, z1 - 0.15), (b, d, z1), "COL")
     # catwalk railing
-    ps = [-WALK + 0.06 + i * (2 * (WALK - 0.06) / 6) for i in range(7)]
+    ps = [-WALK + 0.06 + i * (2 * (WALK - 0.06) / 10) for i in range(11)]
     rail_pts = []
     for p in ps:
         for (x, y) in [(p, -WALK + 0.06), (p, WALK - 0.06), (-WALK + 0.06, p), (WALK - 0.06, p)]:
@@ -397,7 +402,7 @@ def build_cab(col):
             wall_block(m, side, s0 - 0.02, s1 + 0.02, SILL_Z - 0.04, SILL_Z, 0.07, WALL_T + 0.05, "M_TrimCream",
                        "M_TrimCream", "M_TrimCream")
         # corners + mullions (full depth posts in the window band)
-        posts = [(-CAB, -CAB + MULL)] + [(bl[i][1], bl[i + 1][0]) for i in range(2)] + [(CAB - MULL, CAB)]
+        posts = [(-CAB, -CAB + MULL)] + [(bl[i][1], bl[i + 1][0]) for i in range(N_BAYS - 1)] + [(CAB - MULL, CAB)]
         for s0, s1 in posts:
             wall_block(m, side, s0, s1, SILL_Z, WIN_TOP, 0.0, WALL_T, "M_TrimGreen", "M_TrimCream", "M_TrimCream")
             _wall_col(col, side, s0, s1, SILL_Z, WIN_TOP)
@@ -411,7 +416,7 @@ def build_cab(col):
             wall_block(m, side, s0, s1, WIN_TOP - 0.03, WIN_TOP, 0.07, WALL_T, None, "M_TrimCream", "M_TrimCream")
         # door bay
         if side == "S":
-            b0, b1, _ = bl[1]
+            b0, b1, _ = bl[DOOR_BAY]
             for s0, s1 in ((b0, -DOOR_W / 2), (DOOR_W / 2, b1)):
                 wall_block(m, side, s0, s1, SILL_Z - 0.04, WIN_TOP, 0.0, WALL_T, "M_Siding", "M_Paneling", "M_TrimCream")
                 _wall_col(col, side, s0, s1, FLOOR_Z, WIN_TOP)
@@ -442,10 +447,10 @@ def build_cab(col):
                    "M_TrimCream")
     # ceiling (paneling underside) + two exposed beams
     m.box((-CIN, -CIN, CEIL_Z), (CIN, CIN, CEIL_Z + 0.03), "M_Paneling", grain="y")
-    for y in (-0.7, 0.7):
+    for y in (-1.9, 1.9):
         m.box((-CIN, y - 0.05, CEIL_Z - 0.12), (CIN, y + 0.05, CEIL_Z), "M_Timber")
     # stovepipe through the ceiling: thimble ring
-    m.ring((1.55, 1.55, 0), 0.078, 0.13, CEIL_Z - 0.01, CEIL_Z + 0.0, 12, "M_Iron")
+    m.ring((STOVE[0], STOVE[1], 0), 0.078, 0.13, CEIL_Z - 0.01, CEIL_Z + 0.0, 12, "M_Iron")
     return m
 
 
@@ -487,7 +492,7 @@ def build_roof():
                up=((a - vec(0, 0, a.z)).normalized() * -0.4 + vec(0, 0, 1)), extend=0.02)
     # rafter tails / outlookers visible under the eaves
     for side in range(4):
-        for k in range(-4, 5):
+        for k in range(-6, 7):
             s = k * 0.52
             ang = side * math.pi / 2
             ca, sa = math.cos(ang), math.sin(ang)
@@ -508,7 +513,7 @@ def build_roof():
     m.tube_path([apex + vec(0.03, -0.03, 0.06), corners[1] + vec(-0.1, 0.1, 0.03), corners[1] + vec(-0.35, 0.35, -0.2),
                  vec(CAB + 0.03, -CAB - 0.03, EAVE_Z - 0.3), vec(CAB + 0.03, -CAB - 0.03, FLOOR_Z + 0.2)], 0.008, segs=5)
     # stovepipe stub + cap
-    sx, sy = 1.55, 1.55
+    sx, sy = STOVE
     zr = roof_z(max(sx, sy))
     m.cyl((sx, sy, CEIL_Z), (sx, sy, zr + 0.75), 0.075, segs=12, mat="M_Iron", caps=(False, False))
     m.cyl((sx, sy, zr - 0.02), (sx, sy, zr + 0.08), 0.16, 0.08, segs=12, mat="M_Iron", caps=(True, False))
@@ -518,7 +523,7 @@ def build_roof():
         p = vec(sx + 0.07 * math.cos(a), sy + 0.07 * math.sin(a), 0)
         m.cyl((p.x, p.y, zr + 0.72), (p.x, p.y, zr + 0.87), 0.006, segs=4, mat="M_Iron")
     # radio antenna mast on the west wall
-    ax, ay = -CAB - 0.08, -1.45
+    ax, ay = -CAB - 0.08, -2.6
     m.cyl((ax, ay, SILL_Z - 0.2), (ax, ay, apex.z + 1.4), 0.025, segs=8, mat="M_Iron")
     m.cyl((ax, ay, apex.z + 1.4), (ax, ay, apex.z + 2.6), 0.008, segs=5, mat="M_Iron")
     for z in (SILL_Z, EAVE_Z - 0.2):
@@ -678,8 +683,8 @@ def main(outdir):
     export_fbx(os.path.join(outdir, "LookoutTower.fbx"), objs + [colob])
     meta = dict(
         floor_z=FLOOR_Z, cab_half=CAB, cab_inner=CIN, hatch=HATCH, door=dict(w=DOOR_W, h=DOOR_H),
-        sill_z=SILL_Z, win_top=WIN_TOP, ceil_z=CEIL_Z, eave_z=EAVE_Z, walk=WALK, stove=(1.55, 1.55),
-        low_top=LOW_TOP, lanes=dict(A=LANE_A, B=LANE_B), land_y=LAND_Y, stats=stats)
+        sill_z=SILL_Z, win_top=WIN_TOP, ceil_z=CEIL_Z, eave_z=EAVE_Z, walk=WALK, stove=STOVE,
+        low_top=LOW_TOP, n_low=N_LOW, rise=RISE, lanes=dict(A=LANE_A, B=LANE_B), land_y=LAND_Y, stats=stats)
     json.dump(meta, open(os.path.join(outdir, "tower_meta.json"), "w"), indent=1)
     return objs, colob
 

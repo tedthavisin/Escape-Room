@@ -15,7 +15,7 @@ namespace LookoutTower.EditorTools
     /// from the ground up every flight, through the hatch, round the fire finder to each piece of furniture,
     /// out onto the catwalk and back down to the ground, in a throwaway scene. Reports where it gets stuck.
     /// Tools ▸ Lookout Tower ▸ Run Walkability Test. Also runs at the end of Build Everything.
-    /// Coordinates are the tower prefab's local x/z (metres; the cab floor is at y = 10.5).
+    /// Coordinates are the tower prefab's local x/z (metres; the cab floor is at y = 30.5).
     /// </summary>
     public static class LookoutWalkabilityTest
     {
@@ -27,77 +27,87 @@ namespace LookoutTower.EditorTools
         }
 
         const float Floor = LookoutTowerBuilder.FloorY;
+        const float LowTop = LookoutTowerBuilder.LowTopY;
+        const int Flights = LookoutTowerBuilder.LowFlights;   // even: the last switchback ends on the south landing
 
-        // lane A (west) climbs north, lane B (east) climbs south; landings at |z| 0.86..1.72
-        static readonly Wp[] Climb =
+        // Lane A (west, x -1.24) climbs north, lane B (east, x -0.28) climbs south. Flight j (0-based) uses lane A
+        // when j is even; landing m (the top of flight m-1) is at z = +1.3 when m is odd and -1.3 when m is even.
+        static float LaneX(int flight) => flight % 2 == 0 ? -1.24f : -0.28f;
+        static float LandingZ(int m) => m % 2 == 1 ? 1.3f : -1.3f;
+        static float LandingY(int m) => LowTop * m / Flights;
+
+        static readonly Wp[] Climb = BuildClimb();
+        static readonly Wp[] Descend = BuildDescend();
+
+        static Wp[] BuildClimb()
         {
-            new Wp("start, south of the tower", -1.24f, -3.5f, 0f),
-            new Wp("foot of the stairs", -1.24f, -1.5f, 0f),
-            new Wp("landing 1", -1.24f, 1.3f, 1.35f),
-            new Wp("landing 1, east lane", -0.28f, 1.3f, 1.35f),
-            new Wp("landing 2", -0.28f, -1.3f, 2.7f),
-            new Wp("landing 2, west lane", -1.24f, -1.3f, 2.7f),
-            new Wp("landing 3", -1.24f, 1.3f, 4.05f),
-            new Wp("landing 3, east lane", -0.28f, 1.3f, 4.05f),
-            new Wp("landing 4", -0.28f, -1.3f, 5.4f),
-            new Wp("landing 4, west lane", -1.24f, -1.3f, 5.4f),
-            new Wp("landing 5", -1.24f, 1.3f, 6.75f),
-            new Wp("landing 5, east lane", -0.28f, 1.3f, 6.75f),
-            new Wp("top landing", -0.28f, -1.3f, 8.1f),
-            new Wp("foot of the ladder", -1.24f, -1.3f, 8.1f),
-            new Wp("up the ladder and through the hatch", -1.24f, 0.70f, Floor),
-        };
+            var l = new List<Wp>
+            {
+                new Wp("start, south of the tower", -1.24f, -6.0f, 0f),
+                new Wp("foot of the stairs", -1.24f, -1.5f, 0f),
+            };
+            for (int m = 1; m <= Flights; m++)
+            {
+                l.Add(new Wp(m == Flights ? "top landing" : $"landing {m}", LaneX(m - 1), LandingZ(m), LandingY(m)));
+                if (m < Flights) l.Add(new Wp($"landing {m}, other lane", LaneX(m), LandingZ(m), LandingY(m)));
+            }
+            l.Add(new Wp("foot of the ladder", -1.24f, -1.3f, LowTop));
+            l.Add(new Wp("up the ladder and through the hatch", -1.24f, 0.70f, Floor));
+            return l.ToArray();
+        }
 
+        static Wp[] BuildDescend()
+        {
+            var l = new List<Wp>
+            {
+                new Wp("back in through the door", 0f, -3.2f, Floor),
+                new Wp("cab: south-west of the fire finder", -0.73f, -1.9f, Floor),
+                new Wp("cab: between fire finder and hatch", -0.73f, 0.35f, Floor),
+                new Wp("cab: north of the hatch", -0.95f, 0.75f, Floor),
+                new Wp("cab: top of the ladder", -1.24f, 0.75f, Floor),
+                new Wp("down the ladder to the top landing", -1.24f, -1.3f, LowTop),
+                new Wp("top landing, east lane", -0.28f, -1.3f, LowTop),
+            };
+            for (int m = Flights - 1; m >= 1; m--)
+            {
+                l.Add(new Wp($"down to landing {m}", LaneX(m), LandingZ(m), LandingY(m)));
+                l.Add(new Wp($"landing {m}, other lane", LaneX(m - 1), LandingZ(m), LandingY(m)));
+            }
+            l.Add(new Wp("down to the ground", -1.24f, -1.5f, 0f));
+            l.Add(new Wp("out from under the tower", -1.24f, -6.0f, 0f));
+            return l.ToArray();
+        }
+
+        // The cab is 7.06 m across inside: desk on the east wall, stove NE, cot NW, cupboard SE, map board on the
+        // south wall, fire finder in the middle, hatch (x -1.65..-0.83, z -1.32..0.28) west of it.
         static readonly Wp[] Cab =
         {
-            new Wp("cab: north-west of the fire finder", -0.55f, 0.78f, Floor),
-            new Wp("cab: between fire finder and cot", 0.05f, 0.80f, Floor),
-            new Wp("cab: north-east of the fire finder", 0.85f, 0.75f, Floor),
-            new Wp("cab: in front of the stove", 1.50f, 0.70f, Floor),
-            new Wp("cab: back from the stove", 0.86f, 0.75f, Floor),
-            new Wp("cab: east of the fire finder, by the chair", 0.86f, 0.0f, Floor),
-            new Wp("cab: towards the cupboard", 0.95f, -1.12f, Floor),
-            new Wp("cab: in front of the cupboard", 1.55f, -1.12f, Floor),
-            new Wp("cab: south of the fire finder", 0.05f, -1.05f, Floor),
+            new Wp("cab: north-west of the fire finder", -0.55f, 1.2f, Floor),
+            new Wp("cab: north of the fire finder", 0.05f, 1.4f, Floor),
+            new Wp("cab: north-east of the fire finder", 1.4f, 1.4f, Floor),
+            new Wp("cab: in front of the stove", 2.9f, 1.7f, Floor),
+            new Wp("cab: back from the stove", 1.4f, 1.4f, Floor),
+            new Wp("cab: east of the fire finder, by the desk", 2.3f, 0.0f, Floor),
+            new Wp("cab: towards the cupboard", 2.3f, -2.4f, Floor),
+            new Wp("cab: in front of the cupboard", 3.06f, -2.6f, Floor),
+            new Wp("cab: south of the fire finder", 0.05f, -1.4f, Floor),
             new Wp("cab: south-west of the fire finder", -0.73f, -0.75f, Floor),
             new Wp("cab: between fire finder and hatch", -0.73f, 0.35f, Floor),
-            new Wp("cab: round the fire finder (loop closed)", -0.55f, 0.78f, Floor),
-            new Wp("cab: back down the hatch side", -0.73f, 0.35f, Floor),
-            new Wp("cab: south of the hatch", -0.73f, -1.6f, Floor),
-            new Wp("cab: at the map board", -1.25f, -1.62f, Floor),
-            new Wp("cab: inside the door", 0f, -1.62f, Floor),
-            new Wp("doorway", 0f, -2.1f, Floor),
-            new Wp("catwalk", 0f, -2.65f, Floor),
-        };
-
-        static readonly Wp[] Descend =
-        {
-            new Wp("back in through the door", 0f, -1.62f, Floor),
-            new Wp("cab: south-west of the fire finder", -0.73f, -1.0f, Floor),
-            new Wp("cab: between fire finder and hatch", -0.73f, 0.35f, Floor),
-            new Wp("cab: north of the hatch", -0.95f, 0.75f, Floor),
-            new Wp("cab: top of the ladder", -1.24f, 0.75f, Floor),
-            new Wp("down the ladder to the top landing", -1.24f, -1.3f, 8.1f),
-            new Wp("top landing, east lane", -0.28f, -1.3f, 8.1f),
-            new Wp("down to landing 5", -0.28f, 1.3f, 6.75f),
-            new Wp("landing 5, west lane", -1.24f, 1.3f, 6.75f),
-            new Wp("down to landing 4", -1.24f, -1.3f, 5.4f),
-            new Wp("landing 4, east lane", -0.28f, -1.3f, 5.4f),
-            new Wp("down to landing 3", -0.28f, 1.3f, 4.05f),
-            new Wp("landing 3, west lane", -1.24f, 1.3f, 4.05f),
-            new Wp("down to landing 2", -1.24f, -1.3f, 2.7f),
-            new Wp("landing 2, east lane", -0.28f, -1.3f, 2.7f),
-            new Wp("down to landing 1", -0.28f, 1.3f, 1.35f),
-            new Wp("landing 1, west lane", -1.24f, 1.3f, 1.35f),
-            new Wp("down to the ground", -1.24f, -1.5f, 0f),
-            new Wp("out from under the tower", -1.24f, -3.5f, 0f),
+            new Wp("cab: round the fire finder (loop closed)", -0.55f, 1.2f, Floor),
+            new Wp("cab: in front of the cot", -2.4f, 2.4f, Floor),
+            new Wp("cab: west of the hatch", -2.4f, -0.5f, Floor),
+            new Wp("cab: south of the hatch", -0.73f, -1.9f, Floor),
+            new Wp("cab: at the map board", -2.2f, -3.2f, Floor),
+            new Wp("cab: inside the door", 0f, -3.2f, Floor),
+            new Wp("doorway", 0f, -3.75f, Floor),
+            new Wp("catwalk", 0f, -4.15f, Floor),
         };
 
         // just the steep last flight: from where the stairs arrive on the top landing, through the hatch
         static readonly Wp[] Ladder =
         {
-            new Wp("top landing", -0.28f, -1.3f, 8.1f),
-            new Wp("foot of the ladder", -1.24f, -1.3f, 8.1f),
+            new Wp("top landing", -0.28f, -1.3f, LowTop),
+            new Wp("foot of the ladder", -1.24f, -1.3f, LowTop),
             new Wp("up the ladder and through the hatch", -1.24f, 0.70f, Floor),
         };
 
@@ -170,7 +180,7 @@ namespace LookoutTower.EditorTools
                 ground.name = "Ground";
                 SceneManager.MoveGameObjectToScene(ground, scene);
                 ground.transform.position = origin + new Vector3(0f, -0.5f, 0f);
-                ground.transform.localScale = new Vector3(60f, 1f, 60f);
+                ground.transform.localScale = new Vector3(80f, 1f, 80f);
                 int opened = 0;
                 foreach (var h in tower.GetComponentsInChildren<HingedOpenable>(true))
                     if (h.name == "Door" || h.name == "Trapdoor") { h.SetOpenImmediate(true); opened++; }
@@ -288,7 +298,7 @@ namespace LookoutTower.EditorTools
                     if (sinceProgress > 2.5f)
                         return Fail($"STUCK on the way to '{route[i].name}' (#{i}) at ({q.x:0.00}, {q.y:0.00}, {q.z:0.00})");
                     if (q.y < -1f) return Fail("fell through the ground");
-                    if (t > 400f) return Fail("ran out of time");
+                    if (t > 1200f) return Fail("ran out of time");
                 }
                 return new WalkResult { ok = true, message = $"all {route.Length} waypoints reached ({t:0} s of walking)" };
             }

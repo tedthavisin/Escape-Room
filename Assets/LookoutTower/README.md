@@ -62,6 +62,20 @@ trapdoor.Unlock(); trapdoor.Open();    // e.g. when a puzzle is solved
   can't open the trapdoor while standing on it or close it on someone's head.
 - The fire finder has `TurnOnInteract` (15° steps, `CurrentAngle`, `onTurned`) for azimuth puzzles.
 - `LanternFlicker.sputter` (0–1) makes the lantern gutter for scares.
+- **Breath-fog window** (`BreathFogWindow` on `Openables/Window_N2`, the middle north window): lean in close to the
+  glass from inside the cab, face it and breathe out. The glass fogs up where the breath lands, and a code someone
+  wrote with a fingertip shows up as clear strokes in the fog (lower panes, about chest height). The fog lingers ~4 s,
+  then evaporates from the edges in ~10 s.
+  - Set the code on the **tower prefab** (`code`, default `2741`), not on the scene instance: Build Everything keeps
+    the prefab's settings (and whichever window you moved the component to) but regenerates the scene.
+  - For the lock: `fogWindow.Code` / `fogWindow.CheckCode("2741")`; `onRevealed` fires the first time the code is
+    readable, `onCodeVisibleChanged(bool)` every time it appears or fades. `FogNow()` fogs it instantly (hints).
+  - Breath comes from the microphone via `BreathSensor` (auto-created; add it to any object to tune thresholds, or
+    tick `logLevels` to see mic levels). Hold **B** to breathe without a mic, or tick `simulateBreath` in Play mode.
+    The Quest asks for microphone permission on first launch (`RECORD_AUDIO` is in the Android manifest).
+  - Reach is 0.5 m from the mouth, so the desktop explorer works standing at the wall; in VR players lean in.
+  - Move the writing with `writingCentre` / `digitHeight` (the gizmo shows the area when the window is selected);
+    after moving the component to another window, use *Fit To Glass* from its context menu.
 - Anything implementing `IInteractable` (`Prompt`, `Interact()`) works with the desktop explorer, and a
   VR interactor can call the same `Interact()` later.
 

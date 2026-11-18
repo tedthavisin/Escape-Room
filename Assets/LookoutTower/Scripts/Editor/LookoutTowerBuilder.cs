@@ -741,8 +741,39 @@ namespace LookoutTower.EditorTools
         }
 
         // ================================================================== tower
+        /// <summary>Window that hides the breath-fog code when the prefab has none yet.</summary>
+        const string DefaultBreathFogWindow = "Window_N2";
+
+        /// <summary>
+        /// BreathFogWindow settings on the current tower prefab, by window name, so a rebuild keeps the code and
+        /// whichever window a designer moved the puzzle to.
+        /// </summary>
+        static Dictionary<string, string> CaptureBreathFogWindows()
+        {
+            var keep = new Dictionary<string, string>();
+            var old = AssetDatabase.LoadAssetAtPath<GameObject>(TowerPrefabPath);
+            if (old != null)
+                foreach (var w in old.GetComponentsInChildren<BreathFogWindow>(true))
+                    keep[w.gameObject.name] = EditorJsonUtility.ToJson(w);
+            return keep;
+        }
+
+        static void AddBreathFogWindows(Transform openRoot, Dictionary<string, string> keep)
+        {
+            if (keep.Count == 0) keep[DefaultBreathFogWindow] = null;
+            foreach (var kv in keep)
+            {
+                var t = openRoot.Find(kv.Key);
+                if (t == null) { Log($"Breath fog window {kv.Key} not found; skipped."); continue; }
+                var w = t.gameObject.AddComponent<BreathFogWindow>();
+                if (kv.Value != null) EditorJsonUtility.FromJsonOverwrite(kv.Value, w);
+                w.FitToGlass();                      // the glass may have moved since the settings were saved
+            }
+        }
+
         static GameObject BuildTowerPrefab(Dictionary<string, PropInfo> props)
         {
+            var breathFog = CaptureBreathFogWindows();
             var root = InstantiateModel(TowerFbx);
             root.name = "LookoutTower";
             var children = root.transform.Cast<Transform>().ToList();
@@ -776,6 +807,8 @@ namespace LookoutTower.EditorTools
                     foreach (var r in c.GetComponentsInChildren<MeshRenderer>(true)) r.receiveGI = ReceiveGI.Lightmaps;
                 }
             }
+
+            AddBreathFogWindows(openRoot, breathFog);
 
             // props (nested prefab instances)
             var propRoot = new GameObject("Cab_Props").transform;

@@ -76,6 +76,33 @@ up every flight, through the hatch, round the fire finder to each piece of furni
 and back down, and tells you where it gets stuck. It also runs at the end of Build Everything (results in
 `LookoutTowerSource/build_log.txt`). Run it after moving furniture or changing the stairs.
 
+### Escape timer and sound
+
+- **10-minute clock** (`--- Game --- / Escape Timer`: `EscapeTimer` + `WristTimer`). It starts when the scene loads
+  and stops when the keypad unlocks the hatch (you escaped). The time shows in the top-right corner on desktop; in
+  VR it becomes a small watch face on the left wrist once an XR rig with a left controller is in the scene (found
+  by name, or via `XRInteractBridge.leftController`). White, then amber under 3 minutes, pulsing red in the last
+  minute, green once you're out.
+- **Last minute:** a watch starts ticking (and speeds up) and a heartbeat fades in.
+- **At 0:00:** an alarm clock rings, the controls stop, the lanterns gutter out, the view fades to black with
+  "You didn't make it out.", and the scene restarts about 8 s later.
+- **Winning** (`--- Game --- / Win Screen`: `WinScreen`): once the keypad has unlocked the hatch and the player climbs
+  down through it (head 0.4 m below the cab floor), the view fades to black and a panel appears 1.3 m in front of
+  them: "You escaped!", the time taken, and a **Play again** button that restarts the game. While it's up the camera
+  draws only the panel's layer (UI), so the ladder shaft can't hide it. The button works by pointing a controller at
+  it and pulling the trigger (`XRInteractBridge` aims only at the panel while it shows), or by looking at it and
+  pressing E; any trigger, E, Enter, Space or a mouse click also plays again (after a 1 s grace period).
+- Testing: on the Escape Timer component's ⋮ menu, *Debug: Jump To Last Minute* and *Debug: Run Out Now*; on the
+  Win Screen's, *Debug: Show Win Screen*.
+- **Ambience** (`--- Game --- / Ambience`: `AmbienceDirector`): gusting wind, timber creaks from the cab walls in
+  strong gusts, and a distant owl every 25–60 s. Kept quiet on purpose (measured in the mix: wind about -43 dBFS,
+  owl and creaks a few dB above it, a door creaking next to you about -30).
+- **Object and puzzle sounds:** doors, the trapdoor (creak, lid landing, a thud when it's locked) and windows; a
+  ratchet click per fire finder step; radio static when the sight lines up; paper rustle when you step up to a note (`ProximitySound`).
+- All sounds are CC0 recordings from BigSoundBank in `Audio/` (sources in `Audio/CREDITS.md`), played as trimmed
+  `SoundCue`s. `GameAudioSetup.cs` sets every cue and volume; Build Everything calls it, and
+  `Tools ▸ Lookout Tower ▸ Apply Timer And Sounds` re-applies it to the current prefab and open scene.
+
 ## The tower, in numbers
 
 - Cab floor / catwalk at **30.5 m (100 ft)**. Cab is **7.3 × 7.3 m** (24 ft) outside, 2.75 m ceiling, 1 m wide catwalk, five window bays per wall. Legs taper from 9.6 m apart at the ground to 6.4 m at the top.

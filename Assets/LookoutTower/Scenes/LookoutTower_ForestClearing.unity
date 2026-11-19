@@ -6887,6 +6887,116 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2299135383222144679, guid: 97436122b682d492db07c8981a38286f, type: 3}
   m_PrefabInstance: {fileID: 362105514}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &368445963
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 368445964}
+  - component: {fileID: 368445965}
+  m_Layer: 0
+  m_Name: Ambience
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &368445964
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 368445963}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 908930327}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &368445965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 368445963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aca3caf3e2c54f5a8ccbd7a0f2cf705, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LookoutTower.AmbienceDirector
+  cabCentre: {fileID: 0}
+  wind:
+    clip: {fileID: 8300000, guid: 44dd2b9822c2c4d77a183c8f30e1b3be, type: 3}
+    start: 0
+    length: 0
+    volume: 1
+    pitch: 1
+    pitchJitter: 0
+  windVolume: 0.15
+  gustDepth: 0.55
+  gustSpeed: 0.07
+  creaks:
+  - clip: {fileID: 8300000, guid: 7b00c0d3b5a72425e997166842791430, type: 3}
+    start: 0.3
+    length: 0.6
+    volume: 0.6
+    pitch: 0.6
+    pitchJitter: 0.06
+  - clip: {fileID: 8300000, guid: 7b00c0d3b5a72425e997166842791430, type: 3}
+    start: 1.6
+    length: 0.9
+    volume: 0.6
+    pitch: 0.6
+    pitchJitter: 0.06
+  - clip: {fileID: 8300000, guid: 7b00c0d3b5a72425e997166842791430, type: 3}
+    start: 3.4
+    length: 0.8
+    volume: 0.6
+    pitch: 0.6
+    pitchJitter: 0.06
+  - clip: {fileID: 8300000, guid: 7b00c0d3b5a72425e997166842791430, type: 3}
+    start: 5.4
+    length: 0.7
+    volume: 0.6
+    pitch: 0.6
+    pitchJitter: 0.06
+  - clip: {fileID: 8300000, guid: 7b00c0d3b5a72425e997166842791430, type: 3}
+    start: 7.4
+    length: 0.7
+    volume: 0.6
+    pitch: 0.6
+    pitchJitter: 0.06
+  - clip: {fileID: 8300000, guid: 7b00c0d3b5a72425e997166842791430, type: 3}
+    start: 11
+    length: 1.3
+    volume: 0.6
+    pitch: 0.6
+    pitchJitter: 0.06
+  - clip: {fileID: 8300000, guid: 7b00c0d3b5a72425e997166842791430, type: 3}
+    start: 12.4
+    length: 0.9
+    volume: 0.6
+    pitch: 0.6
+    pitchJitter: 0.06
+  creakGustThreshold: 0.62
+  creakGap: {x: 3, y: 9}
+  creakRadius: 3.4
+  owl:
+    clip: {fileID: 8300000, guid: 5b018354a2e084140a17b29494cae1f9, type: 3}
+    start: 0
+    length: 7
+    volume: 0.2
+    pitch: 1
+    pitchJitter: 0
+  owlInterval: {x: 25, y: 60}
+  owlDistance: {x: 35, y: 70}
 --- !u!1001 &395054452
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14615,6 +14725,7 @@ GameObject:
   m_Component:
   - component: {fileID: 888724608}
   - component: {fileID: 888724609}
+  - component: {fileID: 888724610}
   m_Layer: 0
   m_Name: Moonlight
   m_TagString: Untagged
@@ -14702,6 +14813,35 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!114 &888724610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 888724607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1001 &891453402
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15146,6 +15286,40 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6264922179410481328, guid: cf087e35b1bbfd04a995c12158524cec, type: 3}
   m_PrefabInstance: {fileID: 903700688}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &908930326
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 908930327}
+  m_Layer: 0
+  m_Name: --- Game ---
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &908930327
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 908930326}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1663331269}
+  - {fileID: 368445964}
+  - {fileID: 1606839266}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &909335803
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25594,6 +25768,60 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7762527279938904317, guid: 0347df367561442b1b3faaac04e3e7b2, type: 3}
   m_PrefabInstance: {fileID: 1604120485}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1606839265
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1606839266}
+  - component: {fileID: 1606839267}
+  m_Layer: 0
+  m_Name: Win Screen
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1606839266
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1606839265}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 908930327}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1606839267
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1606839265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb1fbced1bf34c06acda375b5c477c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LookoutTower.WinScreen
+  timer: {fileID: 1663331271}
+  floorHeight: 0
+  dropBelowFloor: 0.4
+  fadeMaterial: {fileID: 2100000, guid: a70f2733b5ef84b39b2bd6a6e76f8d48, type: 2}
+  fadeSeconds: 1.5
+  panelDistance: 1.3
+  inputGrace: 1
+  title: You escaped!
+  buttonLabel: Play again
+  hint: Pull a trigger, press E or click
 --- !u!1001 &1609961702
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26482,6 +26710,108 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6264922179410481328, guid: cf087e35b1bbfd04a995c12158524cec, type: 3}
   m_PrefabInstance: {fileID: 1661636375}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1663331268
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1663331269}
+  - component: {fileID: 1663331271}
+  - component: {fileID: 1663331270}
+  m_Layer: 0
+  m_Name: Escape Timer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1663331269
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663331268}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 908930327}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1663331270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663331268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ea4157043e4441078650ad71e29b726, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LookoutTower.WristTimer
+  timer: {fileID: 1663331271}
+  wristAnchor: {fileID: 0}
+  watchOffset: {x: 0, y: 0.035, z: -0.09}
+  watchEuler: {x: 90, y: 0, z: 0}
+  showOnScreenWithoutWrist: 1
+  amberBelowSeconds: 180
+--- !u!114 &1663331271
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663331268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca5d0112ab5f4401fb84c28cc3712fdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LookoutTower.EscapeTimer
+  durationSeconds: 600
+  startOnLoad: 1
+  hatchLock: {fileID: 0}
+  tick:
+    clip: {fileID: 8300000, guid: b2e87d872c6cc497fb1e4303722f64c0, type: 3}
+    start: 0
+    length: 0
+    volume: 0.22
+    pitch: 1
+    pitchJitter: 0
+  lastMinuteSeconds: 60
+  heartbeat:
+    clip: {fileID: 8300000, guid: bea4fbd619bb94ea4af64da1cd12f085, type: 3}
+    start: 0
+    length: 0
+    volume: 0.9
+    pitch: 1
+    pitchJitter: 0
+  lastMinuteTickSpeedUp: 0.25
+  alarm:
+    clip: {fileID: 8300000, guid: 0c205742e7636449caceb2a8ff810353, type: 3}
+    start: 0
+    length: 9.6
+    volume: 0.9
+    pitch: 1
+    pitchJitter: 0
+  fadeMaterial: {fileID: 2100000, guid: a70f2733b5ef84b39b2bd6a6e76f8d48, type: 2}
+  loseMessage: You didn't make it out.
+  fadeSeconds: 2.5
+  restartDelay: 8
+  onLastMinute:
+    m_PersistentCalls:
+      m_Calls: []
+  onEscaped:
+    m_PersistentCalls:
+      m_Calls: []
+  onTimeUp:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1001 &1680071102
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -27063,6 +27393,21 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 0}
     - targetCorrespondingSourceObject: {fileID: 4406822771140753114, guid: bec32bdcb45d4437ca58605c43ef1d0f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
+    - targetCorrespondingSourceObject: {fileID: 547676965362200012, guid: bec32bdcb45d4437ca58605c43ef1d0f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
+    - targetCorrespondingSourceObject: {fileID: 6481181958177439906, guid: bec32bdcb45d4437ca58605c43ef1d0f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
+    - targetCorrespondingSourceObject: {fileID: 757649523963351595, guid: bec32bdcb45d4437ca58605c43ef1d0f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
+    - targetCorrespondingSourceObject: {fileID: 4927331673266611157, guid: bec32bdcb45d4437ca58605c43ef1d0f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
+    - targetCorrespondingSourceObject: {fileID: 6804212065127810491, guid: bec32bdcb45d4437ca58605c43ef1d0f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: bec32bdcb45d4437ca58605c43ef1d0f, type: 3}
@@ -32516,6 +32861,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1918970237}
   - component: {fileID: 1918970238}
+  - component: {fileID: 1918970239}
   m_Layer: 0
   m_Name: Lamp Light
   m_TagString: Untagged
@@ -32603,6 +32949,35 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!114 &1918970239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1918970236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1001 &1919760339
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -36277,3 +36652,4 @@ SceneRoots:
   - {fileID: 1133187708}
   - {fileID: 1716018350}
   - {fileID: 108501291}
+  - {fileID: 908930327}

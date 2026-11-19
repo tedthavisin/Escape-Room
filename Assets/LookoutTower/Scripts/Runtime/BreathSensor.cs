@@ -169,6 +169,7 @@ namespace LookoutTower
             _readPos = pos;
             int total = _clip.samples;
             int n = Mathf.Min(_buf.Length, total);
+            if (n <= 0) return 0f;                             // mic not delivering yet (e.g. no permission)
             _clip.GetData(_buf, (pos - n + total) % total);   // GetData wraps round the looping clip itself
 
             double sum = 0;

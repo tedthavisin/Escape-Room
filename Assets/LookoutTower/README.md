@@ -281,6 +281,9 @@ the scene file don't need to know about it; a scene that already has its own rig
   (`VrLocomotion.smoothTurn` for smooth turning). The body follows the headset, so you can also walk and duck for real.
 - **Trigger** uses what the controller's laser points at (it turns orange when there's something to use).
   **A / X** swaps fuses, **right stick click** toggles a flashlight on the right controller.
+- **Reset:** a red RESET button on the right wrist (`WristResetButton`). Touch it with the tip of the left controller
+  (it lights up and says *PULL TRIGGER*) and pull the left trigger to restart from the beginning with a full clock,
+  same as Play Again. It needs the trigger, so resting your hands together can't reset by accident.
 - The Y/B cab jump is off in the escape room, same as T on the desktop (`XRInteractBridge.allowCabJump`).
 - Movement stops when the timer runs out or the win screen is up.
 

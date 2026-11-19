@@ -148,6 +148,10 @@ namespace LookoutTower
             bridge.cabSpawn = desktop.cabSpawn;
             bridge.allowCabJump = desktop.allowCabTeleport;   // off in the escape room: it would skip the hatch lock
 
+            // RESET on the right wrist: touch it with the left controller and pull the left trigger
+            var reset = rightController.gameObject.AddComponent<WristResetButton>();
+            reset.presser = leftController;
+
             var loco = gameObject.AddComponent<VrLocomotion>();
             loco.head = head.transform;
 

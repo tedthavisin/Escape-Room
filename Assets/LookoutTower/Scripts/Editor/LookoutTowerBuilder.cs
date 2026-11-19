@@ -39,9 +39,9 @@ namespace LookoutTower.EditorTools
         internal const int LowFlights = 20;      // switchback flights, 8 risers each
 
         /// <summary>Bump when the builder's output changes, so older builds get offered a rebuild.</summary>
-        public const int BuilderVersion = 8;
+        public const int BuilderVersion = 9;
         /// <summary>One line for the rebuild prompt: what changed in this builder version.</summary>
-        public const string WhatChanged = "player starts in the cab; stair hatch locked behind a keypad (code 1789)";
+        public const string WhatChanged = "fire finder puzzle: sight the smoke circled on the wall map and the ranger's lamp answers (digit 7)";
         static string StampPath => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "LookoutTowerSource", "builder_version.txt"));
 
         public static int BuiltVersion()
@@ -520,6 +520,257 @@ namespace LookoutTower.EditorTools
             return null;
         }
 
+        // ================================================================== fire finder puzzle (digit 7)
+        /// <summary>Default bearing of the reported smoke: the big lake's north arm on the map. A multiple of 15°, and through the middle of an east window bay (120° sits behind a window post).</summary>
+        const float SmokeBearing = 105f;
+        /// <summary>Distance of the smoke from the tower triangle on the map texture, in texture pixels (of 1024).</summary>
+        const float SmokeMapRadiusPx = 383f;
+        const string MapTexSizeNote = "T_Map_Albedo is 1024², tower triangle at its centre";
+        const float BeaconDistance = 90f;
+        /// <summary>Which digit of the hatch code (1789) this puzzle gives, and the digit: the lamp flashes the position
+        /// slowly, then the digit quickly.</summary>
+        const int SmokeCodeSlot = 2, SmokeCodeDigit = 7;
+        const float BeaconDipDegrees = 3f;   // how far below the horizon the lamp sits, seen from the cab (the window sill cuts off ~7° from the fire finder)
+
+        /// <summary>The smoke bearing set on the current fire finder prefab, so a rebuild keeps a designer's change.</summary>
+        static float CaptureSmokeBearing()
+        {
+            var old = AssetDatabase.LoadAssetAtPath<GameObject>($"{PropDir}/Prop_FireFinder.prefab");
+            var s = old != null ? old.GetComponent<FireFinderSighting>() : null;
+            float b = s != null ? s.targetBearing : SmokeBearing;
+            if (!Mathf.Approximately(Mathf.Repeat(b, 15f), 0f)) Log($"Smoke bearing {b}° isn't a multiple of 15°: the sight can't stop on it.");
+            return b;
+        }
+
+        static Vector3 BearingDir(float bearing)
+        {
+            float a = bearing * Mathf.Deg2Rad;
+            return new Vector3(Mathf.Sin(a), 0f, Mathf.Cos(a));
+        }
+
+        /// <summary>
+        /// The fire finder's table map is modelled with image-up pointing east (unit disc UVs). Copy the mesh with the
+        /// map's UVs turned so image-up is north and image-right east, matching the wall map, and save it as an asset.
+        /// </summary>
+        static Mesh NorthUpFinderMesh(MeshFilter mf, MeshRenderer mr)
+        {
+            if (mf == null || mr == null || mf.sharedMesh == null) return null;
+            int map = Array.FindIndex(mr.sharedMaterials, m => m != null && m.name == "M_Map");
+            if (map < 0 || map >= mf.sharedMesh.subMeshCount) { Log("Fire finder: no M_Map part; table map left as modelled."); return null; }
+            var mesh = Object.Instantiate(mf.sharedMesh);
+            mesh.name = "FireFinder_NorthUp";
+            var mapVerts = new HashSet<int>(mesh.GetTriangles(map));
+            for (int s = 0; s < mesh.subMeshCount; s++)
+                if (s != map && mesh.GetTriangles(s).Any(mapVerts.Contains))
+                {
+                    Log("Fire finder: map vertices are shared with another part; table map left as modelled.");
+                    Object.DestroyImmediate(mesh);
+                    return null;
+                }
+            var uv = mesh.uv;
+            foreach (int i in mapVerts) uv[i] = new Vector2(uv[i].y, 1f - uv[i].x);   // (east-up) -> (north-up)
+            mesh.uv = uv;
+            return SaveMeshAsset(mesh, $"{PropDir}/FireFinder_NorthUp.asset");
+        }
+
+        /// <summary>Saves a generated mesh, updating the existing asset in place (keeps its GUID and references).</summary>
+        static Mesh SaveMeshAsset(Mesh mesh, string path)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (existing == null) { AssetDatabase.CreateAsset(mesh, path); return mesh; }
+            EditorUtility.CopySerialized(mesh, existing);
+            Object.DestroyImmediate(mesh);
+            return existing;
+        }
+
+        /// <summary>Flat red ring (both faces), like a grease-pencil circle round the smoke on the wall map.</summary>
+        static Mesh SmokeCircleMesh()
+        {
+            const int segs = 40;
+            const float rIn = 0.019f, rOut = 0.025f;
+            var v = new List<Vector3>();
+            var n = new List<Vector3>();
+            var tris = new List<int>();
+            for (int side = 0; side < 2; side++)
+            {
+                int b = v.Count;
+                float nz = side == 0 ? 1f : -1f;   // side 0 winds front-facing toward +Z, side 1 toward -Z
+                for (int i = 0; i < segs; i++)
+                {
+                    // a little wobble so it reads hand-drawn
+                    float a = 2f * Mathf.PI * i / segs, w = 1f + 0.06f * Mathf.Sin(a * 3f + 0.7f);
+                    v.Add(new Vector3(Mathf.Cos(a) * rIn * w, Mathf.Sin(a) * rIn * w, 0f));
+                    v.Add(new Vector3(Mathf.Cos(a) * rOut * w, Mathf.Sin(a) * rOut * w, 0f));
+                    n.Add(new Vector3(0f, 0f, nz));
+                    n.Add(new Vector3(0f, 0f, nz));
+                }
+                for (int i = 0; i < segs; i++)
+                {
+                    int i0 = b + i * 2, i1 = b + ((i + 1) % segs) * 2;
+                    if (side == 0) tris.AddRange(new[] { i0, i0 + 1, i1 + 1, i0, i1 + 1, i1 });
+                    else tris.AddRange(new[] { i0, i1 + 1, i0 + 1, i0, i1, i1 + 1 });
+                }
+            }
+            var mesh = new Mesh { name = "SmokeCircle" };
+            mesh.SetVertices(v);
+            mesh.SetNormals(n);
+            mesh.SetTriangles(tris, 0);
+            mesh.RecalculateBounds();
+            return SaveMeshAsset(mesh, $"{PropDir}/SmokeCircle.asset");
+        }
+
+        /// <summary>
+        /// World position (and outward normal) of a texture UV on a prop's flat M_Map sheet, from the sheet's own mesh:
+        /// an affine fit through one of its triangles, so it follows the model wherever it was placed.
+        /// </summary>
+        static bool MapSheetPoint(Transform sheet, Vector2 uv, out Vector3 pos, out Vector3 normal, out Rect uvRect)
+        {
+            pos = normal = default;
+            uvRect = default;
+            var mf = sheet != null ? sheet.GetComponent<MeshFilter>() : null;
+            var mr = sheet != null ? sheet.GetComponent<MeshRenderer>() : null;
+            if (mf == null || mr == null) return false;
+            int map = Array.FindIndex(mr.sharedMaterials, m => m != null && m.name == "M_Map");
+            if (map < 0) return false;
+            var mesh = mf.sharedMesh;
+            var tri = mesh.GetTriangles(map);
+            var verts = mesh.vertices;
+            var uvs = mesh.uv;
+            var norms = mesh.normals;
+            Vector3 p0 = sheet.TransformPoint(verts[tri[0]]), p1 = sheet.TransformPoint(verts[tri[1]]), p2 = sheet.TransformPoint(verts[tri[2]]);
+            Vector2 t0 = uvs[tri[0]], t1 = uvs[tri[1]], t2 = uvs[tri[2]];
+            float det = (t1.x - t0.x) * (t2.y - t0.y) - (t2.x - t0.x) * (t1.y - t0.y);
+            if (Mathf.Abs(det) < 1e-8f) return false;
+            Vector3 du = ((p1 - p0) * (t2.y - t0.y) - (p2 - p0) * (t1.y - t0.y)) / det;
+            Vector3 dv = ((p2 - p0) * (t1.x - t0.x) - (p1 - p0) * (t2.x - t0.x)) / det;
+            pos = p0 + du * (uv.x - t0.x) + dv * (uv.y - t0.y);
+            normal = norms.Length > tri[0] ? sheet.TransformDirection(norms[tri[0]]).normalized : Vector3.Cross(du, dv).normalized;
+            float u0 = float.MaxValue, u1 = float.MinValue, v0 = float.MaxValue, v1 = float.MinValue;
+            foreach (int i in tri) { u0 = Mathf.Min(u0, uvs[i].x); u1 = Mathf.Max(u1, uvs[i].x); v0 = Mathf.Min(v0, uvs[i].y); v1 = Mathf.Max(v1, uvs[i].y); }
+            uvRect = Rect.MinMaxRect(u0, v0, u1, v1);
+            return true;
+        }
+
+        /// <summary>UV on the map texture of a point at a bearing and pixel distance from the tower triangle (north up).</summary>
+        static Vector2 MapUv(float bearing, float radiusPx)
+        {
+            Vector3 d = BearingDir(bearing);
+            float x = 512f + d.x * radiusPx;      // east is image-right
+            float yDown = 512f - d.z * radiusPx;  // north is image-up
+            return new Vector2(x / 1024f, 1f - yDown / 1024f);
+        }
+
+        static TMPro.TextMeshPro AddLabel(Transform parent, string name, string text, Vector2 size, Color color, Vector3 localPos)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPos;
+            var tmp = go.AddComponent<TMPro.TextMeshPro>();
+            tmp.rectTransform.sizeDelta = size;
+            tmp.text = text;
+            tmp.color = color;
+            tmp.enableAutoSizing = true;
+            tmp.fontSizeMin = 0.01f;
+            tmp.fontSizeMax = 2f;
+            tmp.alignment = TMPro.TextAlignmentOptions.Center;
+            tmp.textWrappingMode = TMPro.TextWrappingModes.Normal;
+            return tmp;
+        }
+
+        /// <summary>Paper quad (no collider) facing local -Z, with optional text on it.</summary>
+        static GameObject AddPaper(Transform parent, string name, Vector2 size, string text, Vector3 pos, Quaternion rot)
+        {
+            var paper = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            paper.name = name;
+            Object.DestroyImmediate(paper.GetComponent<Collider>());
+            paper.transform.SetParent(parent, false);
+            paper.transform.SetPositionAndRotation(pos, rot);
+            paper.transform.localScale = new Vector3(size.x, size.y, 1f);
+            var m = Mat("M_Paper");
+            if (m != null) paper.GetComponent<MeshRenderer>().sharedMaterial = m;
+            if (!string.IsNullOrEmpty(text))
+            {
+                // text sits just in front of the paper; undo the quad's scale so TMP sizes are in metres
+                var holder = new GameObject("Text").transform;
+                holder.SetParent(paper.transform, false);
+                holder.localPosition = new Vector3(0f, 0f, -0.002f);
+                holder.localScale = new Vector3(1f / size.x, 1f / size.y, 1f);
+                var tmp = AddLabel(holder, "Label", text, size * 0.86f, new Color(0.12f, 0.1f, 0.09f), Vector3.zero);
+                tmp.alignment = TMPro.TextAlignmentOptions.TopLeft;
+                FitText(tmp);
+            }
+            return paper;
+        }
+
+        /// <summary>
+        /// Largest font size whose wrapped text fits the label's rect. TMP's own auto-size gives up early on wrapped
+        /// multi-paragraph text and leaves it far too small, so measure it here and fix the size.
+        /// </summary>
+        static void FitText(TMPro.TextMeshPro tmp)
+        {
+            Vector2 box = tmp.rectTransform.sizeDelta;
+            tmp.enableAutoSizing = false;
+            float lo = 0.002f, hi = box.y;   // binary search on the font size (metres)
+            for (int i = 0; i < 24; i++)
+            {
+                float mid = (lo + hi) * 0.5f;
+                tmp.fontSize = mid;
+                Vector2 need = tmp.GetPreferredValues(tmp.text, box.x, 0f);
+                if (need.y <= box.y) lo = mid;
+                else hi = mid;
+            }
+            tmp.fontSize = lo;
+        }
+
+        /// <summary>Wall-map smoke circle, its tag, a north marker, and the dispatch note on the desk.</summary>
+        static void AddFireFinderPuzzle(Transform root, Transform puzzles)
+        {
+            var finder = FindChild(root, "Prop_FireFinder");
+            var sighting = finder != null ? finder.GetComponent<FireFinderSighting>() : null;
+            float bearing = sighting != null ? sighting.targetBearing : SmokeBearing;
+            var group = new GameObject("FireFinderPuzzle").transform;
+            group.SetParent(puzzles, false);
+
+            var sheet = FindChild(root, "MapBoard");
+            Vector2 uv = MapUv(bearing, SmokeMapRadiusPx);
+            if (MapSheetPoint(sheet, uv, out var pos, out var normal, out var uvRect))
+            {
+                if (!uvRect.Contains(uv)) Log($"Smoke at {bearing}° (map uv {uv}) is off the wall map's visible part {uvRect}; move it closer ({MapTexSizeNote}).");
+                var rot = Quaternion.LookRotation(-normal, Vector3.up);   // local -Z faces out of the map, toward the room
+                var circle = new GameObject("SmokeCircle");
+                circle.transform.SetParent(group, false);
+                circle.transform.SetPositionAndRotation(pos + normal * 0.002f, rot);
+                circle.AddComponent<MeshFilter>().sharedMesh = SmokeCircleMesh();
+                var cr = circle.AddComponent<MeshRenderer>();
+                cr.sharedMaterial = Mat("M_RedPaint");
+                // tag pinned above the circle, toward the middle of the map so it stays on the sheet
+                Vector3 right = rot * Vector3.right;  // the viewer faces local +Z too, so local +X is their right
+                Vector3 toCentre = Vector3.Dot(sheet.position - pos, right) >= 0f ? right : -right;   // sideways toward the board's middle
+                AddPaper(group, "SmokeTag", new Vector2(0.12f, 0.05f), "SMOKE 9/14\nconfirm w/ fire finder",
+                         pos + normal * 0.003f + toCentre * 0.08f + Vector3.up * 0.045f, rot * Quaternion.Euler(0f, 0f, 3f));
+                // north marker in the map's top-left corner
+                if (MapSheetPoint(sheet, new Vector2(uvRect.xMin + 0.05f, uvRect.yMax - 0.06f), out var npos, out _, out _))
+                {
+                    var north = new GameObject("NorthMarker");
+                    north.transform.SetParent(group, false);
+                    north.transform.SetPositionAndRotation(npos + normal * 0.002f, rot);
+                    AddLabel(north.transform, "N","N\n|", new Vector2(0.05f, 0.06f), new Color(0.12f, 0.1f, 0.09f), Vector3.zero).fontStyle = TMPro.FontStyles.Bold;
+                }
+                Log($"Fire finder puzzle: smoke at bearing {bearing}°, map uv {uv}, circle at {pos}");
+            }
+            else Log("Fire finder puzzle: wall map sheet not found; no smoke circle.");
+
+            // dispatch note tucked on the logbook (text reads from the room side, top toward the wall)
+            var logbook = FindChild(root, "Prop_Logbook");
+            Vector3 notePos = logbook != null && TryWorldBounds(logbook.gameObject, out var lb)
+                ? new Vector3(lb.center.x - 0.03f, lb.max.y + 0.002f, lb.center.z + 0.02f)
+                : new Vector3(3.07f, FloorY + 0.79f, -0.23f);
+            AddPaper(group, "DispatchNote", new Vector2(0.15f, 0.19f),
+                     "DISPATCH 9/14\n\nSmoke reported. I circled it on the wall map.\n\nShoot a bearing with the fire finder: " +
+                     "line the sight up over the spot on the table map.\n\nRanger Hale will answer with his lamp.\n\n- M.",
+                     notePos, Quaternion.Euler(90f, 96f, 0f));
+        }
+
         // ================================================================== props
         class PropInfo
         {
@@ -530,6 +781,7 @@ namespace LookoutTower.EditorTools
         static Dictionary<string, PropInfo> BuildPropPrefabs()
         {
             var result = new Dictionary<string, PropInfo>();
+            float smokeBearing = CaptureSmokeBearing();
             var model = InstantiateModel(PropsFbx);
             var kids = model.transform.Cast<Transform>().ToList();
             Transform Kid(string n) => kids.FirstOrDefault(k => k.name == n);
@@ -563,7 +815,17 @@ namespace LookoutTower.EditorTools
                             turn.localAxis = s.InverseTransformDirection(Vector3.up).normalized;
                             turn.stepDegrees = 15f;
                             turn.prompt = "Turn the fire finder sight";
+
+                            // puzzle: the sight on the reported smoke's bearing makes the ranger's lamp answer
+                            var sighting = root.AddComponent<FireFinderSighting>();
+                            sighting.turn = turn;
+                            sighting.sight = s;
+                            sighting.sightFrontLocal = s.InverseTransformDirection(Vector3.forward).normalized;   // front vane faces north as modelled
+                            sighting.targetBearing = smokeBearing;
                         }
+                        var tableMap = k.GetComponent<MeshFilter>();
+                        var northUp = NorthUpFinderMesh(tableMap, k.GetComponent<MeshRenderer>());
+                        if (northUp != null) tableMap.sharedMesh = northUp;
                         break;
                     }
                     case "Lantern":
@@ -927,6 +1189,13 @@ namespace LookoutTower.EditorTools
                 var inst = (GameObject)PrefabUtility.InstantiatePrefab(kv.Value.prefab, propRoot);
                 inst.transform.position = kv.Value.position;
             }
+            var puzzleRoot = root.transform.Find("Puzzles");
+            if (puzzleRoot == null)
+            {
+                puzzleRoot = new GameObject("Puzzles").transform;
+                puzzleRoot.SetParent(root.transform, false);
+            }
+            AddFireFinderPuzzle(root.transform, puzzleRoot);
 
             // markers + reflection probe
             var markers = new GameObject("Markers").transform;
@@ -1216,6 +1485,21 @@ namespace LookoutTower.EditorTools
             var tower = (GameObject)PrefabUtility.InstantiatePrefab(towerPrefab);
             tower.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
 
+            // --- the ranger's answering lamp for the fire finder puzzle, on a radio mast along the smoke bearing
+            var sighting = tower.GetComponentInChildren<FireFinderSighting>(true);
+            float smokeBearing = sighting != null ? sighting.targetBearing : SmokeBearing;
+            Vector3 beaconDir = BearingDir(smokeBearing);
+            var beacon = BuildSightingBeacon(env, sighting, beaconDir);
+            Vector3 beaconXZ = new Vector3(beacon.position.x, 0f, beacon.position.z);
+            // keep trees and rocks out of the sightline from the cab to the lamp
+            bool InSightline(float x, float z)
+            {
+                Vector3 a = beaconDir * 12f, p = new Vector3(x, 0f, z);
+                Vector3 ab = beaconXZ - a;
+                float t = Mathf.Clamp01(Vector3.Dot(p - a, ab) / ab.sqrMagnitude);
+                return (p - (a + ab * t)).sqrMagnitude < 5f * 5f;
+            }
+
             // --- forest
             var rnd = new System.Random(20261112);
             float R() => (float)rnd.NextDouble();
@@ -1237,7 +1521,7 @@ namespace LookoutTower.EditorTools
                 float ang = R() * Mathf.PI * 2f;
                 float x = Mathf.Cos(ang) * r, z = Mathf.Sin(ang) * r;
                 if (Mathf.Abs(x) > 97f || Mathf.Abs(z) > 97f) continue;
-                if (PathDist(x, z) < 3.4f) continue;
+                if (PathDist(x, z) < 3.4f || InSightline(x, z)) continue;
                 float minD = r < 26f ? 3.3f : 4.3f;
                 bool ok = true;
                 foreach (var p in placed)
@@ -1266,7 +1550,7 @@ namespace LookoutTower.EditorTools
                     float r = Mathf.Sqrt(Mathf.Lerp(rMin * rMin, rMax * rMax, R()));
                     float ang = R() * Mathf.PI * 2f;
                     float x = Mathf.Cos(ang) * r, z = Mathf.Sin(ang) * r;
-                    if (Mathf.Abs(x) > 96f || Mathf.Abs(z) > 96f || PathDist(x, z) < 2.8f) continue;
+                    if (Mathf.Abs(x) > 96f || Mathf.Abs(z) > 96f || PathDist(x, z) < 2.8f || InSightline(x, z)) continue;
                     bool ok = true;
                     foreach (var p in placed)
                         if ((p.x - x) * (p.x - x) + (p.z - z) * (p.z - z) < 2.2f * 2.2f) { ok = false; break; }
@@ -1346,6 +1630,96 @@ namespace LookoutTower.EditorTools
             }
         }
 
+        /// <summary>
+        /// Radio mast with the ranger's lamp, BeaconDistance out along the smoke bearing, tall enough that the lamp sits
+        /// BeaconDipDegrees below the horizon from a standing eye in the cab (above the window sills).
+        /// Returns the lamp transform.
+        /// </summary>
+        static Transform BuildSightingBeacon(Transform env, FireFinderSighting sighting, Vector3 dir)
+        {
+            Vector3 xz = dir * BeaconDistance;
+            float ground = GroundHeight(xz.x, xz.z);
+            float eyeY = FloorY + 1.6f;
+            float lampY = Mathf.Max(ground + 6f, eyeY - BeaconDistance * Mathf.Tan(BeaconDipDegrees * Mathf.Deg2Rad));
+            float h = lampY - ground;
+
+            var root = new GameObject("Sighting Beacon (ranger's lamp)");
+            root.transform.SetParent(env, false);
+            root.transform.position = new Vector3(xz.x, ground, xz.z);
+
+            var mast = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            mast.name = "Mast";
+            mast.transform.SetParent(root.transform, false);
+            mast.transform.localPosition = new Vector3(0f, h * 0.5f, 0f);
+            mast.transform.localScale = new Vector3(0.22f, h * 0.5f, 0.22f);
+            var iron = Mat("M_Iron");
+            if (iron != null) mast.GetComponent<MeshRenderer>().sharedMaterial = iron;
+            var arm = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            arm.name = "Crossarm";
+            Object.DestroyImmediate(arm.GetComponent<Collider>());
+            arm.transform.SetParent(root.transform, false);
+            arm.transform.localPosition = new Vector3(0f, h - 0.6f, 0f);
+            arm.transform.localScale = new Vector3(1.6f, 0.1f, 0.1f);
+            arm.transform.localRotation = Quaternion.LookRotation(-dir);   // square-on to the tower
+            if (iron != null) arm.GetComponent<MeshRenderer>().sharedMaterial = iron;
+
+            var lamp = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            lamp.name = "Lamp";
+            Object.DestroyImmediate(lamp.GetComponent<Collider>());
+            lamp.transform.SetParent(root.transform, false);
+            lamp.transform.localPosition = new Vector3(0f, h + 0.2f, 0f);
+            lamp.transform.localScale = Vector3.one * 0.4f;
+            var glass = Mat("M_LanternGlass");
+            if (glass != null) lamp.GetComponent<MeshRenderer>().sharedMaterial = glass;
+
+            var glowGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            glowGo.name = "Glow";
+            Object.DestroyImmediate(glowGo.GetComponent<Collider>());
+            glowGo.transform.SetParent(lamp.transform, false);
+            glowGo.transform.localScale = Vector3.one * (4f / 0.4f);     // ~4 m across in the world: a clear point of light at 90 m
+            glowGo.transform.rotation = Quaternion.LookRotation(dir);    // faces the tower until the script turns it to the camera
+            var glowR = glowGo.GetComponent<MeshRenderer>();
+            glowR.sharedMaterial = BeaconGlowMaterial();
+            glowR.shadowCastingMode = ShadowCastingMode.Off;
+            glowR.receiveShadows = false;
+
+            var lightGo = new GameObject("Lamp Light");
+            lightGo.transform.SetParent(lamp.transform, false);
+            var l = lightGo.AddComponent<Light>();
+            l.type = LightType.Point;
+            l.color = new Color(1f, 0.78f, 0.45f);
+            l.range = 14f;
+            l.intensity = 3f;
+            l.shadows = LightShadows.None;
+            l.lightmapBakeType = LightmapBakeType.Realtime;
+
+            var b = root.AddComponent<SightingBeacon>();
+            b.sighting = sighting;
+            b.glow = glowR;
+            b.lampLight = l;
+            b.slotFlashes = SmokeCodeSlot;
+            b.flashes = SmokeCodeDigit;
+            Log($"Sighting beacon at {lamp.transform.position} (bearing {Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg:0}°, mast {h:0.0} m)" +
+                (sighting == null ? "; no FireFinderSighting found, the lamp will never answer" : ""));
+            return lamp.transform;
+        }
+
+        static Material BeaconGlowMaterial()
+        {
+            string path = $"{MatDir}/M_BeaconGlow.mat";
+            var shader = Shader.Find("LookoutTower/BeaconGlow");
+            var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (m == null)
+            {
+                m = new Material(shader) { name = "M_BeaconGlow" };
+                AssetDatabase.CreateAsset(m, path);
+            }
+            else if (shader != null) m.shader = shader;
+            m.SetColor("_Color", new Color(9f, 5.6f, 2.4f, 1f));
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
         static GameObject PickTree(NatureSet n, float u, bool youngOnly)
         {
             var pool = youngOnly ? n.trees.Where(t => t.young).ToList() : n.trees;
@@ -1404,6 +1778,17 @@ namespace LookoutTower.EditorTools
             var trap = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<HingedOpenable>(true))
                             .FirstOrDefault(o => o.name == "Trapdoor");
             bool trapWasOpen = trap != null && trap.IsOpen;
+            // fire finder puzzle: a shot down the sight at the ranger's lamp, with the sight turned onto the smoke
+            var views = Views.ToList();
+            var sighting = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<FireFinderSighting>(true)).FirstOrDefault();
+            var beacon = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<SightingBeacon>(true)).FirstOrDefault();
+            Quaternion sightWas = sighting != null && sighting.sight != null ? sighting.sight.localRotation : Quaternion.identity;
+            if (sighting != null && beacon != null && beacon.glow != null)
+            {
+                Vector3 d = BearingDir(sighting.targetBearing);
+                Vector3 eye = new Vector3(sighting.transform.position.x, FloorY + 1.55f, sighting.transform.position.z) - d * 0.6f;
+                views.Add(new View("12_sight_to_beacon", eye, beacon.glow.transform.position, 45f));
+            }
             const int w = 1600, h = 900;
             var go = new GameObject("~LookoutTowerScreenshotCam") { hideFlags = HideFlags.HideAndDontSave };
             var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
@@ -1417,9 +1802,13 @@ namespace LookoutTower.EditorTools
                 var data = cam.GetUniversalAdditionalCameraData();
                 data.renderPostProcessing = true;
                 cam.targetTexture = rt;
-                foreach (var v in Views)
+                foreach (var v in views)
                 {
                     if (trap != null) trap.SetOpenImmediate(v.trapdoorOpen);
+                    if (sighting != null && sighting.sight != null && sighting.turn != null)
+                        sighting.sight.localRotation = v.name == "12_sight_to_beacon"
+                            ? sightWas * Quaternion.AngleAxis(sighting.targetBearing, sighting.turn.localAxis.normalized)
+                            : sightWas;
                     cam.fieldOfView = v.fov;
                     go.transform.position = v.pos;
                     go.transform.LookAt(v.target);
@@ -1431,12 +1820,13 @@ namespace LookoutTower.EditorTools
                     RenderTexture.active = prev;
                     File.WriteAllBytes(Path.Combine(dir, v.name + ".png"), tex.EncodeToPNG());
                 }
-                Debug.Log($"[LookoutTower] Saved {Views.Length} preview screenshots to {dir}");
-                Log($"Saved {Views.Length} screenshots to {dir}");
+                Debug.Log($"[LookoutTower] Saved {views.Count} preview screenshots to {dir}");
+                Log($"Saved {views.Count} screenshots to {dir}");
                 return dir;
             }
             finally
             {
+                if (sighting != null && sighting.sight != null) sighting.sight.localRotation = sightWas;
                 // put the trapdoor back the way it was saved (the hatch shots open it)
                 if (trap != null)
                 {

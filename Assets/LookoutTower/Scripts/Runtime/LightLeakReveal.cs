@@ -1,0 +1,173 @@
+using UnityEngine;
+using UnityEngine.Events;
+
+namespace LookoutTower
+{
+    /// <summary>
+    /// The fuse box's reward: the ranger punched the last digit of the hatch code ("_ _ _ 9") as pinholes in the top of
+    /// the pendant lamp's shade. When the panel is solved the power surges in: the lamp dips, swells, the pendant gets
+    /// a jolt and swings, and the pinhole pattern of light appears on the ceiling. The pattern fades in with the surge,
+    /// slides about as the pendant swings (it is re-projected from the bulb every frame) and always follows the lamp's
+    /// own brightness, so it flickers and goes dark with it.
+    ///
+    /// The light pattern is an additive decal on the ceiling rather than a cookie light, so it costs nothing and shows
+    /// the same on Quest (Forward, 4 lights per object) as on PC. Wired to <c>FuseBoxPanel.onSolved</c> by
+    /// FuseBoxPuzzleBuilder; the texture is generated there too (LightLeakDecal), so the digit is a constant in the builder.
+    /// </summary>
+    public class LightLeakReveal : MonoBehaviour
+    {
+        [Tooltip("The lamp whose light leaks. The projection follows its brightness (flicker, power cut).")]
+        public Light lamp;
+        [Tooltip("The light pattern on the ceiling (an additive quad). Hidden until the reveal.")]
+        public Renderer leak;
+        [Tooltip("Colour of the leaked light at full strength (values above 1 feed the bloom).")]
+        public Color leakColor = new Color(1.5f, 1.15f, 0.72f);
+        [Tooltip("What swings when the power surges in (this pendant, by default). Leave empty for no swing.")]
+        public Transform pendant;
+        [Tooltip("Where the pendant hangs from, in the pendant's parent space (the bottom of the ceiling box).")]
+        public Vector3 swingPivot;
+        [Tooltip("Horizontal swing axis, in the pendant's parent space.")]
+        public Vector3 swingAxis = new Vector3(1f, 0f, 0.35f);
+
+        [Header("Timing")]
+        [Tooltip("Seconds after the solve before the surge, so the lamp's own power-up flicker plays first.")]
+        public float delay = 0.75f;
+        [Tooltip("Seconds for the projection to come up to full.")]
+        public float fadeIn = 1.8f;
+        [Tooltip("Initial swing, degrees. Settles on its own.")]
+        public float swingDegrees = 5f;
+        [Tooltip("Seconds for the swing to die down to about a third.")]
+        public float swingDecay = 2.6f;
+        [Tooltip("Pendulum length in metres (sets the swing's period).")]
+        public float pendulumLength = 0.48f;
+
+        [Tooltip("Shown a few seconds after the reveal in case nobody looks up. Empty = no hint.")]
+        public string hint = "Light is leaking through pinholes in the lamp shade onto the ceiling.";
+        public float hintAfter = 4f;
+
+        public UnityEvent onRevealed = new UnityEvent();
+
+        public bool IsRevealed { get; private set; }
+
+        float _t0 = -1f, _lampBase;
+        Vector3 _restPos, _leakDirLocal;
+        float _leakPlaneY;
+        MaterialPropertyBlock _mpb;
+        static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        Quaternion _restRot;
+        bool _surged, _lampRestored, _swingDone, _hinted;
+
+        void Awake()
+        {
+            if (pendant == null) pendant = transform;
+            if (lamp != null) _lampBase = lamp.intensity;
+            if (leak != null)
+            {
+                leak.enabled = false;
+                _mpb = new MaterialPropertyBlock();
+                _leakPlaneY = leak.transform.position.y;
+                if (lamp != null) _leakDirLocal = lamp.transform.InverseTransformDirection(leak.transform.position - lamp.transform.position);
+            }
+            _restPos = pendant.localPosition;
+            _restRot = pendant.localRotation;
+        }
+
+        /// <summary>Start the reveal (wired to FuseBoxPanel.onSolved). Only the first call does anything.</summary>
+        public void Reveal()
+        {
+            if (IsRevealed) return;
+            IsRevealed = true;
+            _t0 = Time.time;
+        }
+
+        [ContextMenu("Reveal now (play mode)")]
+        void RevealNow()
+        {
+            if (Application.isPlaying) { Reveal(); _t0 = Time.time - delay; }
+        }
+
+        void Update()
+        {
+            if (!IsRevealed) return;
+            float t = Time.time - _t0 - delay;
+            if (t < 0f) return;
+            bool lampOn = lamp == null || (lamp.enabled && lamp.isActiveAndEnabled);
+
+            if (!_surged)
+            {
+                _surged = true;
+                PuzzleSfx.Play(PuzzleSfx.Surge, transform.position, 0.8f);
+                onRevealed.Invoke();
+            }
+
+            // surge on the lamp itself: a brown-out dip as the other circuits take load, a swell, then settle
+            if (lamp != null && !_lampRestored)
+            {
+                if (t < 1.6f) { if (lampOn) lamp.intensity = _lampBase * Surge(t); }
+                else { _lampRestored = true; if (lampOn) lamp.intensity = _lampBase; }
+            }
+
+            // the projection: fades in behind the surge, rides the lamp's brightness, filament shimmer while warming
+            if (leak != null)
+            {
+                float fade = Mathf.Clamp01((t - 0.15f) / Mathf.Max(0.01f, fadeIn));
+                fade = fade * fade * (3f - 2f * fade);
+                float lampK = lamp != null && _lampBase > 0f ? lamp.intensity / _lampBase : 1f;
+                float warm = 1f - (1f - fade) * 0.45f * Mathf.PerlinNoise(Time.time * 23f, 3.1f);
+                float k = fade * lampK * warm;
+                leak.enabled = lampOn && k > 0.001f;
+                if (leak.enabled)
+                {
+                    _mpb.SetColor(BaseColorId, leakColor * k);
+                    leak.SetPropertyBlock(_mpb);
+                }
+            }
+
+            // the jolt: a damped pendulum about the ceiling box, so the digits drift and settle
+            if (pendant != null && !_swingDone && swingDegrees > 0f)
+            {
+                float w = Mathf.Sqrt(9.81f / Mathf.Max(0.05f, pendulumLength));
+                float amp = swingDegrees * Mathf.Exp(-t / Mathf.Max(0.1f, swingDecay));
+                if (amp < 0.03f)
+                {
+                    _swingDone = true;
+                    pendant.localPosition = _restPos;
+                    pendant.localRotation = _restRot;
+                }
+                else
+                {
+                    var q = Quaternion.AngleAxis(amp * Mathf.Sin(w * t), swingAxis.normalized);
+                    pendant.localRotation = q * _restRot;
+                    pendant.localPosition = swingPivot + q * (_restPos - swingPivot);
+                }
+                FollowLamp();
+            }
+
+            if (!_hinted && !string.IsNullOrEmpty(hint) && t >= hintAfter)
+            {
+                _hinted = true;
+                PuzzleHints.Show(hint);
+            }
+        }
+
+        // re-project the pattern from the (swinging) bulb onto the ceiling plane
+        void FollowLamp()
+        {
+            if (leak == null || lamp == null) return;
+            var from = lamp.transform.position;
+            var dir = lamp.transform.TransformDirection(_leakDirLocal);
+            if (Mathf.Abs(dir.y) < 1e-4f) return;
+            var p = from + dir * ((_leakPlaneY - from.y) / dir.y);
+            leak.transform.position = p;
+        }
+
+        // 1 = normal. Dip to ~35% for a beat, swell past full, ease back.
+        static float Surge(float t)
+        {
+            if (t < 0.12f) return Mathf.Lerp(1f, 0.35f, t / 0.12f);
+            if (t < 0.25f) return 0.35f;
+            if (t < 0.7f) return Mathf.Lerp(0.35f, 1.45f, Mathf.SmoothStep(0f, 1f, (t - 0.25f) / 0.45f));
+            return Mathf.Lerp(1.45f, 1f, Mathf.SmoothStep(0f, 1f, (t - 0.7f) / 0.9f));
+        }
+    }
+}

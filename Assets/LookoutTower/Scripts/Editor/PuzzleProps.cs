@@ -552,7 +552,8 @@ namespace LookoutTower.EditorTools
             {
                 assetPath = MorseGuidePath,
                 name = "Note_MorseGuide",
-                position = new Vector3(0.55f, 30.5f + 1.5f, -3.5285f),
+                // solid strip of wall just west of the cab door (the strip east of it holds the fuse box panel)
+                position = new Vector3(-0.55f, 30.5f + 1.5f, -3.5285f),
                 // reader faces south, into the wall; pinned a touch crooked
                 rotation = Quaternion.LookRotation(Vector3.back, Vector3.up) * Quaternion.Euler(0f, 0f, 2f),
                 scale = Vector3.one,

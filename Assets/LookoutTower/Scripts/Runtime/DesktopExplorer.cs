@@ -42,7 +42,6 @@ namespace LookoutTower
         string _toast;
         float _toastUntil;
         readonly RaycastHit[] _headHits = new RaycastHit[16];
-        readonly RaycastHit[] _focusHits = new RaycastHit[16];
 
         void Start()
         {
@@ -64,6 +63,10 @@ namespace LookoutTower
                 transform.Rotate(0f, d.x, 0f, Space.Self);
                 _pitch = Mathf.Clamp(_pitch - d.y, -85f, 85f);
             }
+            // arrow keys look around too (trackpads, testing, remote control)
+            Vector2 k = ArrowLook() * (Held(Key.LeftShift) ? 30f : 90f) * Time.deltaTime;
+            transform.Rotate(0f, k.x, 0f, Space.Self);
+            _pitch = Mathf.Clamp(_pitch - k.y, -85f, 85f);
 
             if (Pressed(Key.C)) _crouch = !_crouch;
             // Duck under anything lower than the body, and never stand up into a ceiling.
@@ -112,23 +115,35 @@ namespace LookoutTower
             return best;
         }
 
+        static bool s_DebugAim;
+        string _aimDebug;
+
         void UpdateFocus()
         {
             _focus = null;
             if (cam == null) return;
-            var ray = InteractRay();
-            // Nearest hit that isn't the player: looking down (e.g. at the hatch keypad) the ray can clip our own
-            // capsule first, which used to swallow the interaction.
-            int n = Physics.RaycastNonAlloc(ray, _focusHits, interactDistance, ~0, QueryTriggerInteraction.Ignore);
-            Collider nearest = null;
-            float best = float.MaxValue;
-            for (int i = 0; i < n; i++)
+            var ray = InteractRay();   // eye-correct when an XR runtime mirrors one eye
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null && Keyboard.current.f3Key.wasPressedThisFrame) s_DebugAim = !s_DebugAim;
+#endif
+            if (s_DebugAim)
             {
-                var c = _focusHits[i].collider;
-                if (c == _cc || c.transform.IsChildOf(transform)) continue;
-                if (_focusHits[i].distance < best) { best = _focusHits[i].distance; nearest = c; }
+                // F3: show what the crosshair ray actually hits (for tracking down blocked interactions)
+                var sbd = new System.Text.StringBuilder();
+                var all = Physics.RaycastAll(ray, 4f, ~0, QueryTriggerInteraction.Ignore);
+                System.Array.Sort(all, (x, y) => x.distance.CompareTo(y.distance));
+                for (int i = 0; i < all.Length && i < 5; i++)
+                {
+                    var t = all[i].collider.transform;
+                    string path = t.name;
+                    for (var p = t.parent; p != null && path.Length < 90; p = p.parent) path = p.name + "/" + path;
+                    sbd.AppendLine($"{all[i].distance:0.00} m  {path}  [{all[i].collider.GetType().Name}{(all[i].collider.isTrigger ? ", trigger" : "")}]");
+                }
+                _aimDebug = sbd.Length > 0 ? sbd.ToString() : "(ray hits nothing within 4 m)";
             }
-            if (nearest != null) _focus = nearest.GetComponentInParent<IInteractable>();
+            // forgiving aim: small things (fuses, tin lids) don't need a pixel-perfect hit; never through walls.
+            // The picker also skips the player's own capsule (looking down at the keypad/crate used to hit it).
+            _focus = InteractionPicker.Pick(ray, interactDistance, InteractionPicker.DefaultRadius, transform);
         }
 
         /// <summary>
@@ -199,6 +214,8 @@ namespace LookoutTower
                 GUI.Label(new Rect(cx - 200f, cy + 42f, 400f, 24f), _toast, style);
             if (Cursor.lockState != CursorLockMode.Locked)
                 GUI.Label(new Rect(cx - 220f, cy - 40f, 440f, 24f), "Click to look around  ·  WASD  E  F  C  T", style);
+            if (s_DebugAim && !string.IsNullOrEmpty(_aimDebug))
+                GUI.Label(new Rect(12f, 12f, 900f, 120f), _aimDebug, new GUIStyle(GUI.skin.label) { fontSize = 14 });
         }
 
         // ------------------------------------------------------------------ input (new Input System, legacy fallback)
@@ -222,6 +239,14 @@ namespace LookoutTower
         static bool Held(Key k) => Keyboard.current != null && Keyboard.current[Map(k)].isPressed;
         static bool ClickedLeft() => Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
         static Vector2 LookDelta() => Mouse.current != null ? Mouse.current.delta.ReadValue() : Vector2.zero;
+
+        static Vector2 ArrowLook()
+        {
+            var kb = Keyboard.current;
+            if (kb == null) return Vector2.zero;
+            return new Vector2((kb.rightArrowKey.isPressed ? 1f : 0f) - (kb.leftArrowKey.isPressed ? 1f : 0f),
+                               (kb.upArrowKey.isPressed ? 1f : 0f) - (kb.downArrowKey.isPressed ? 1f : 0f));
+        }
 
         static Vector2 MoveInput()
         {
@@ -249,6 +274,10 @@ namespace LookoutTower
         static bool Held(Key k) => Input.GetKey(Map(k));
         static bool ClickedLeft() => Input.GetMouseButtonDown(0);
         static Vector2 LookDelta() => new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y")) * 10f;
+
+        static Vector2 ArrowLook() =>
+            new Vector2((Input.GetKey(KeyCode.RightArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.LeftArrow) ? 1f : 0f),
+                        (Input.GetKey(KeyCode.UpArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.DownArrow) ? 1f : 0f));
 
         static Vector2 MoveInput()
         {

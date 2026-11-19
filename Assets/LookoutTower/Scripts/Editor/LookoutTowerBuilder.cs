@@ -39,9 +39,9 @@ namespace LookoutTower.EditorTools
         internal const int LowFlights = 20;      // switchback flights, 8 risers each
 
         /// <summary>Bump when the builder's output changes, so older builds get offered a rebuild.</summary>
-        public const int BuilderVersion = 7;
+        public const int BuilderVersion = 8;
         /// <summary>One line for the rebuild prompt: what changed in this builder version.</summary>
-        public const string WhatChanged = "100 ft tower, 7.3 m cab, 20 stair flights, edge ridge, sky matched to fog, Conifers [BOTD] trees";
+        public const string WhatChanged = "player starts in the cab; stair hatch locked behind a keypad (code 1789)";
         static string StampPath => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "LookoutTowerSource", "builder_version.txt"));
 
         public static int BuiltVersion()
@@ -771,9 +771,110 @@ namespace LookoutTower.EditorTools
             }
         }
 
+        // ------------------------------------------------------------------ hatch keypad
+        const string KeypadPrefabPath = "Assets/Keypad/Prefabs/Keypad.prefab";   // the URP variant of the asset-store keypad
+        internal const string HatchKeypadName = "HatchKeypad";
+        /// <summary>Default code for the stair hatch. Change it on the tower prefab's keypad; rebuilds keep that.</summary>
+        const int HatchCode = 1789;
+        /// <summary>Bump when the default post/keypad placement below changes, so a rebuild drops an older layout.</summary>
+        const int HatchKeypadLayout = 2;
+        // A post west of the hatch (hatch x -1.65..-0.83, z -1.32..0.28; hinged on its west edge), turned so the keypad
+        // faces south-east into the cab. It stands clear of the open lid (which leans ~0.2 m west of the hinge, below
+        // 0.8 m) and of the walkway routes the walkability test checks (x = -0.73 and the cot/map-board diagonal).
+        static readonly Vector3 KeypadPostPos = new Vector3(-2.0f, FloorY, -0.1f);
+        static readonly Quaternion KeypadPostRot = Quaternion.Euler(0f, -45f, 0f);
+        const float KeypadPostHeight = 1.25f, KeypadPostWidth = 0.1f;
+        // The keypad's front faces its local -Z (its buttons press in along +Z), and it is ~6 cm deep about its pivot.
+        static readonly Vector3 KeypadLocalPos = new Vector3(0f, 1.2f, -(KeypadPostWidth * 0.5f + 0.035f));
+        static readonly Quaternion KeypadLocalRot = Quaternion.identity;
+
+        class HatchKeypadKeep
+        {
+            public int code = HatchCode;
+            public bool keepPose;
+            public Vector3 postPos, kpPos;
+            public Quaternion postRot, kpRot;
+        }
+
+        /// <summary>The keypad code (and, if the default layout hasn't changed, its placement) on the current prefab.</summary>
+        static HatchKeypadKeep CaptureHatchKeypad()
+        {
+            var keep = new HatchKeypadKeep();
+            var old = AssetDatabase.LoadAssetAtPath<GameObject>(TowerPrefabPath);
+            var t = old != null ? FindChild(old.transform, HatchKeypadName) : null;
+            if (t == null) return keep;
+            var kp = t.GetComponentInChildren<NavKeypad.Keypad>(true);
+            var lockC = t.GetComponent<HatchKeypadLock>();
+            if (kp != null)
+            {
+                var p = new SerializedObject(kp).FindProperty("keypadCombo");
+                if (p != null) keep.code = p.intValue;
+                if (lockC != null && lockC.builderLayout == HatchKeypadLayout)
+                {
+                    keep.keepPose = true;
+                    keep.postPos = t.localPosition;
+                    keep.postRot = t.localRotation;
+                    keep.kpPos = kp.transform.localPosition;
+                    keep.kpRot = kp.transform.localRotation;
+                }
+            }
+            return keep;
+        }
+
+        static void AddHatchKeypad(Transform root, Transform openRoot, HatchKeypadKeep keep)
+        {
+            var trap = openRoot.Find("Trapdoor");
+            var kpPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(KeypadPrefabPath);
+            if (trap == null || kpPrefab == null)
+            {
+                Log($"Hatch keypad skipped (trapdoor {(trap != null ? "found" : "missing")}, {KeypadPrefabPath} {(kpPrefab != null ? "found" : "missing")}).");
+                return;
+            }
+            var puzzles = new GameObject("Puzzles").transform;
+            puzzles.SetParent(root, false);
+
+            // pivot on the floor; the (centred) cube mesh sits on a child
+            var post = new GameObject(HatchKeypadName);
+            post.transform.SetParent(puzzles, false);
+            post.transform.localPosition = keep.keepPose ? keep.postPos : KeypadPostPos;
+            post.transform.localRotation = keep.keepPose ? keep.postRot : KeypadPostRot;
+            var shaft = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            shaft.name = "Post";
+            shaft.transform.SetParent(post.transform, false);
+            shaft.transform.localPosition = new Vector3(0f, KeypadPostHeight * 0.5f, 0f);
+            shaft.transform.localScale = new Vector3(KeypadPostWidth, KeypadPostHeight, KeypadPostWidth);
+            var timber = Mat("M_Timber");
+            if (timber != null) shaft.GetComponent<MeshRenderer>().sharedMaterial = timber;
+            SetStatic(shaft, FullStatic);
+
+            var kpGo = (GameObject)PrefabUtility.InstantiatePrefab(kpPrefab, post.transform);
+            kpGo.name = "Keypad";
+            kpGo.transform.localPosition = keep.keepPose ? keep.kpPos : KeypadLocalPos;
+            kpGo.transform.localRotation = keep.keepPose ? keep.kpRot : KeypadLocalRot;
+            var keypad = kpGo.GetComponentInChildren<NavKeypad.Keypad>(true);
+            if (keypad == null) { Log("Hatch keypad: the keypad prefab has no Keypad component; skipped."); Object.DestroyImmediate(puzzles.gameObject); return; }
+            var so = new SerializedObject(keypad);
+            so.FindProperty("keypadCombo").intValue = keep.code;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            foreach (var b in kpGo.GetComponentsInChildren<NavKeypad.KeypadButton>(true))
+            {
+                if (b.GetComponent<KeypadButtonInteract>() == null) b.gameObject.AddComponent<KeypadButtonInteract>();
+                // The asset ships its button colliders as triggers, but the desktop explorer and XRInteractBridge
+                // raycast with QueryTriggerInteraction.Ignore, so make them solid or the rays pass straight through.
+                foreach (var c in b.GetComponents<Collider>()) c.isTrigger = false;
+            }
+
+            var lockC = post.AddComponent<HatchKeypadLock>();
+            lockC.keypad = keypad;
+            lockC.hatch = trap.GetComponent<HingedOpenable>();
+            lockC.builderLayout = HatchKeypadLayout;
+            Log($"Hatch keypad at {post.transform.position}, code {keep.code}{(keep.keepPose ? " (kept the prefab's placement)" : "")}");
+        }
+
         static GameObject BuildTowerPrefab(Dictionary<string, PropInfo> props)
         {
             var breathFog = CaptureBreathFogWindows();
+            var hatchKeypad = CaptureHatchKeypad();
             var root = InstantiateModel(TowerFbx);
             root.name = "LookoutTower";
             var children = root.transform.Cast<Transform>().ToList();
@@ -809,6 +910,7 @@ namespace LookoutTower.EditorTools
             }
 
             AddBreathFogWindows(openRoot, breathFog);
+            AddHatchKeypad(root.transform, openRoot, hatchKeypad);
 
             // props (nested prefab instances)
             var propRoot = new GameObject("Cab_Props").transform;
@@ -877,6 +979,7 @@ namespace LookoutTower.EditorTools
                 h.openAngle = 105f;
                 h.displayName = "trapdoor";
                 h.speed = 90f;
+                h.locked = true;   // the way out: HatchKeypadLock unlocks it when the keypad code is entered
                 // Collide with the lid and its battens only (top 6 cm): the bounds box also wrapped the pull handle
                 // underneath, which made the open lid stick out over the ladder.
                 var bc = go.GetComponent<BoxCollider>();
@@ -1175,11 +1278,18 @@ namespace LookoutTower.EditorTools
             Scatter(nature.log, 2, 9f, 15f, 0.8f, 1.0f, 0.06f, true);
             Scatter(nature.log, 8, 18f, 80f, 0.8f, 1.3f, 0.06f, true);
 
-            // --- player
-            float sz = -16f, sx = PathX(sz);
+            // --- player: starts locked in the cab; the way out is the hatch, behind the keypad
+            var cabSpawn = FindChild(tower.transform, "CabSpawn");
+            var keypadPost = FindChild(tower.transform, HatchKeypadName);
             var player = new GameObject("Player (Desktop Explorer)");
-            player.transform.SetPositionAndRotation(new Vector3(sx, GroundHeight(sx, sz) + 0.1f, sz),
-                Quaternion.LookRotation(new Vector3(-sx, 0f, -sz).normalized, Vector3.up));
+            Vector3 spawnPos = cabSpawn != null ? cabSpawn.position + Vector3.up * 0.05f : new Vector3(0.75f, FloorY + 0.07f, -1.35f);
+            Quaternion spawnRot = cabSpawn != null ? cabSpawn.rotation : Quaternion.identity;
+            if (keypadPost != null)
+            {
+                Vector3 toKeypad = Vector3.ProjectOnPlane(keypadPost.position - spawnPos, Vector3.up);
+                if (toKeypad.sqrMagnitude > 1e-4f) spawnRot = Quaternion.LookRotation(toKeypad.normalized, Vector3.up);
+            }
+            player.transform.SetPositionAndRotation(spawnPos, spawnRot);
             var cc = player.AddComponent<CharacterController>();
             cc.height = 1.8f;
             cc.radius = 0.3f;
@@ -1215,7 +1325,8 @@ namespace LookoutTower.EditorTools
             var ex = player.AddComponent<DesktopExplorer>();
             ex.cam = cam;
             ex.flashlight = fl;
-            ex.cabSpawn = FindChild(tower.transform, "CabSpawn");
+            ex.cabSpawn = cabSpawn;
+            ex.allowCabTeleport = false;   // T would skip the hatch lock; tick it on the player to test
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -1266,6 +1377,7 @@ namespace LookoutTower.EditorTools
             new View("08_aerial", new Vector3(60f, 45f, -75f), new Vector3(0f, 15f, 0f), 50f),
             new View("09_hatch_from_cab", new Vector3(-0.35f, FloorY + 1.6f, 0.95f), new Vector3(-1.24f, FloorY - 0.9f, -0.75f), 75f, true),
             new View("10_ladder_up_through_hatch", new Vector3(-1.24f, LowTopY + 1.55f, -1.45f), new Vector3(-1.24f, FloorY + 1.2f, 0.35f), 75f, true),
+            new View("11_hatch_keypad", new Vector3(-0.7f, FloorY + 1.6f, -1.6f), new Vector3(-1.9f, FloorY + 0.9f, -0.1f), 70f),
         };
 
         public static string CaptureScreenshots()

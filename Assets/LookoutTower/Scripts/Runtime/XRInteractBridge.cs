@@ -19,6 +19,7 @@ namespace LookoutTower
         public float reach = 2.6f;
 
         InputAction _leftTrigger, _rightTrigger, _cabJump;
+        readonly RaycastHit[] _hits = new RaycastHit[16];
         Vector3 _groundSpawn;
         Quaternion _groundRot;
 
@@ -59,8 +60,18 @@ namespace LookoutTower
         {
             if (hand == null) return;
             var ray = new Ray(hand.position, hand.forward);
-            if (!Physics.Raycast(ray, out var hit, reach, ~0, QueryTriggerInteraction.Ignore)) return;
-            var target = hit.collider.GetComponentInParent<IInteractable>();
+            // nearest hit that isn't part of the rig itself (its CharacterController body can sit in the ray's path)
+            int n = Physics.RaycastNonAlloc(ray, _hits, reach, ~0, QueryTriggerInteraction.Ignore);
+            Collider nearest = null;
+            float best = float.MaxValue;
+            for (int i = 0; i < n; i++)
+            {
+                var c = _hits[i].collider;
+                if (rigRoot != null && c.transform.IsChildOf(rigRoot)) continue;
+                if (_hits[i].distance < best) { best = _hits[i].distance; nearest = c; }
+            }
+            if (nearest == null) return;
+            var target = nearest.GetComponentInParent<IInteractable>();
             if (target == null) return;
             target.Interact();
             if (target is HingedOpenable h && h.locked) Debug.Log($"[LookoutTower] The {h.displayName} won't budge.");

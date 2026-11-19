@@ -156,6 +156,8 @@ namespace LookoutTower
                 Hint(active ? "Gorilla mode on" : "Gorilla mode off", 2f);
             }
             if (!active || _cc == null || !_cc.enabled) return;
+            // the escape timer and win screen freeze the player by switching the explorer off: stay frozen too
+            if (_explorer != null && !_explorer.enabled) return;
             float dt = Time.deltaTime;
             if (dt <= 0f) return;
             if (_vrMode) UpdateVr(dt);

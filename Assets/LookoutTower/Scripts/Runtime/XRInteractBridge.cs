@@ -60,6 +60,14 @@ namespace LookoutTower
         {
             if (hand == null) return;
             var ray = new Ray(hand.position, hand.forward);
+            // While the win screen is up only its panel is drawn, so aim only at the panel: the (now invisible) tower
+            // can sit between a player on the ladder and the Play Again button.
+            if (WinScreen.Showing != null)
+            {
+                if (Physics.Raycast(ray, out var uiHit, reach, 1 << WinScreen.Showing.PanelLayer, QueryTriggerInteraction.Ignore))
+                    uiHit.collider.GetComponentInParent<IInteractable>()?.Interact();
+                return;
+            }
             // nearest hit that isn't part of the rig itself (its CharacterController body can sit in the ray's path)
             int n = Physics.RaycastNonAlloc(ray, _hits, reach, ~0, QueryTriggerInteraction.Ignore);
             Collider nearest = null;

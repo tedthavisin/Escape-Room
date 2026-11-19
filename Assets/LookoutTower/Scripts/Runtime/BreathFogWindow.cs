@@ -65,6 +65,10 @@ namespace LookoutTower
         public Vector3 interiorNormal = Vector3.back;
         public float surfaceOffset = 0.004f;
 
+        [Header("Sound")]
+        [Tooltip("Plays at the glass each time the writing becomes readable (full volume the first time, softer after).")]
+        public SoundCue revealSound;
+
         [Header("Events")]
         [Tooltip("The first time the code becomes readable.")]
         public UnityEvent onRevealed = new UnityEvent();
@@ -325,6 +329,8 @@ namespace LookoutTower
             bool visible = IsCodeVisible ? WritingCoverage > revealCoverage * 0.6f : WritingCoverage >= revealCoverage;
             if (visible == IsCodeVisible) return;
             IsCodeVisible = visible;
+            if (visible && _overlayT != null)
+                Sfx.Play(revealSound, _overlayT.position, 1f, 12f, HasBeenRevealed ? 0.5f : 1f);
             onCodeVisibleChanged.Invoke(visible);
             if (visible && !HasBeenRevealed)
             {

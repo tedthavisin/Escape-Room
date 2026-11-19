@@ -20,6 +20,11 @@ namespace LookoutTower
         [Tooltip("How close (degrees) the sight has to be to count as on target.")]
         public float tolerance = 3f;
 
+        [Tooltip("Plays when the sight comes onto the bearing, e.g. static from the radio.")]
+        public SoundCue alignedSound;
+        [Tooltip("Where the aligned sound comes from (e.g. the radio). Empty = the fire finder.")]
+        public Transform alignedSoundAt;
+
         public UnityEvent onAligned = new UnityEvent();
         public UnityEvent onMisaligned = new UnityEvent();
 
@@ -41,7 +46,11 @@ namespace LookoutTower
             bool aligned = Mathf.Abs(Mathf.DeltaAngle(CurrentBearing, targetBearing)) <= tolerance;
             if (aligned == IsAligned) return;
             IsAligned = aligned;
-            if (aligned) onAligned.Invoke();
+            if (aligned)
+            {
+                Sfx.Play(alignedSound, (alignedSoundAt != null ? alignedSoundAt : transform).position, 1f, 15f);
+                onAligned.Invoke();
+            }
             else onMisaligned.Invoke();
         }
     }

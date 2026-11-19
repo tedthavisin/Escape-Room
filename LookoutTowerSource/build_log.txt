@@ -1,21 +1,21 @@
-[21:40:27] Build started (Unity 6000.5.9f1, pipeline PC_RPAsset)
-[21:40:27] Preparing
-[21:40:28] Materials
-[21:40:30] LookoutTower.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 26 children, first 'Cab_Roof' pos (0.00, 0.00, 0.00) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
-[21:40:30] CabProps.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 14 children, first 'Binoculars' pos (-3.35, 31.26, 0.52) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
-[21:40:30] Forest.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 22 children, first 'Log_A' pos (0.00, 0.00, 0.00) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
-[21:40:30] Cab props
-[21:40:30] Trees and rocks
-[21:40:31] Lookout tower prefab
-[21:40:31] Hatch keypad at (-2.00, 30.50, -0.10), code 1789 (kept the prefab's placement)
-[21:40:31] Fire finder puzzle: smoke at bearing 105°, map uv (0.86, 0.40), circle at (-2.59, 31.07, -3.50)
-[21:40:31] Forest clearing scene
-[21:40:33] Sighting beacon at (86.93, 27.58, -23.29) (bearing 105°, mast 15.7 m)
-[21:40:34] Build succeeded
-[21:40:34] Walkability test
-[21:40:35] WALKTEST Test scene: preview, door + trapdoor opened (2/2).
-[21:40:35] WALKTEST PASS  player 1.80 m: all 109 waypoints reached (91 s of walking)
-[21:40:35] WALKTEST PASS  player 1.15 m: all 109 waypoints reached (91 s of walking)
-[21:40:35] WALKTEST Headroom: capsules up to 2.20 m tall get from the top landing up through the hatch (at 2.25 m: STUCK on the way to 'foot of the ladder' (#1) at (-0.28, 28.10, -1.30))
-[21:40:35] WALKTEST OK    control: with the trapdoor shut the ladder is blocked, as it should be
-[21:40:35] Build finished
+[22:21:26] Build started (Unity 6000.5.9f1, pipeline PC_RPAsset)
+[22:21:26] Preparing
+[22:21:27] Materials
+[22:21:27] LookoutTower.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 26 children, first 'Cab_Roof' pos (0.00, 0.00, 0.00) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
+[22:21:27] CabProps.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 14 children, first 'Binoculars' pos (-3.35, 31.26, 0.52) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
+[22:21:27] Forest.fbx: root rot (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00), 22 children, first 'Log_A' pos (0.00, 0.00, 0.00) rot (0.00, 180.00, 0.00) scale (1.00, 1.00, 1.00)
+[22:21:27] Cab props
+[22:21:27] Trees and rocks
+[22:21:27] Lookout tower prefab
+[22:21:27] Hatch keypad at (-2.00, 30.50, -0.10), code 1789 (kept the prefab's placement)
+[22:21:27] Fire finder puzzle: smoke at bearing 105°, map uv (0.86, 0.40), circle at (-2.59, 31.07, -3.50)
+[22:21:27] Forest clearing scene
+[22:21:28] Sighting beacon at (86.93, 27.58, -23.29) (bearing 105°, mast 15.7 m)
+[22:21:28] Build succeeded
+[22:21:28] Walkability test
+[22:21:28] WALKTEST Test scene: preview, door + trapdoor opened (2/2).
+[22:21:28] WALKTEST PASS  player 1.80 m: all 109 waypoints reached (91 s of walking)
+[22:21:28] WALKTEST PASS  player 1.15 m: all 109 waypoints reached (91 s of walking)
+[22:21:28] WALKTEST Headroom: capsules up to 2.20 m tall get from the top landing up through the hatch (at 2.25 m: STUCK on the way to 'foot of the ladder' (#1) at (-0.28, 28.10, -1.30))
+[22:21:28] WALKTEST OK    control: with the trapdoor shut the ladder is blocked, as it should be
+[22:21:28] Build finished

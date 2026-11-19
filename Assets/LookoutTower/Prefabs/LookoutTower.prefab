@@ -168,6 +168,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -344,6 +372,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: 6cc28e365e0fd43e38660fb69a35c464, type: 3}
+    start: 0.1
+    length: 1.6
+    volume: 0.9
+    pitch: 0.85
+    pitchJitter: 0.05
+  closeSound:
+    clip: {fileID: 8300000, guid: 6cc28e365e0fd43e38660fb69a35c464, type: 3}
+    start: 1.7
+    length: 1.3
+    volume: 0.7
+    pitch: 0.8075
+    pitchJitter: 0.05
+  closedSound:
+    clip: {fileID: 8300000, guid: 52ca3970e6ddc46e0b36fda6c9a1219a, type: 3}
+    start: 2.45
+    length: 1.1
+    volume: 1
+    pitch: 0.85
+    pitchJitter: 0.04
+  lockedSound:
+    clip: {fileID: 8300000, guid: 52ca3970e6ddc46e0b36fda6c9a1219a, type: 3}
+    start: 2.5
+    length: 0.45
+    volume: 0.55
+    pitch: 1.25
+    pitchJitter: 0.08
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -552,6 +608,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -729,6 +813,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -1089,6 +1201,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -1411,6 +1551,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -1588,6 +1756,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -1765,6 +1961,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -1973,6 +2197,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -2150,6 +2402,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -2444,6 +2724,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -2621,6 +2929,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -3038,6 +3374,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: 6cc28e365e0fd43e38660fb69a35c464, type: 3}
+    start: 0.1
+    length: 1.6
+    volume: 0.9
+    pitch: 1
+    pitchJitter: 0.05
+  closeSound:
+    clip: {fileID: 8300000, guid: 6cc28e365e0fd43e38660fb69a35c464, type: 3}
+    start: 1.7
+    length: 1.3
+    volume: 0.7
+    pitch: 0.95
+    pitchJitter: 0.05
+  closedSound:
+    clip: {fileID: 8300000, guid: 52ca3970e6ddc46e0b36fda6c9a1219a, type: 3}
+    start: 2.45
+    length: 1.1
+    volume: 1
+    pitch: 1
+    pitchJitter: 0.04
+  lockedSound:
+    clip: {fileID: 8300000, guid: 52ca3970e6ddc46e0b36fda6c9a1219a, type: 3}
+    start: 2.5
+    length: 0.45
+    volume: 0.55
+    pitch: 1.25
+    pitchJitter: 0.08
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -3215,6 +3579,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -3529,6 +3921,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -3747,6 +4167,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -3767,6 +4215,7 @@ GameObject:
   - component: {fileID: 5106307034954731756}
   - component: {fileID: 892539048526472976}
   - component: {fileID: 585028577960073467}
+  - component: {fileID: 4751918936967839157}
   m_Layer: 0
   m_Name: DispatchNote
   m_TagString: Untagged
@@ -3847,6 +4296,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &4751918936967839157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6628866937440097728}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4b76169d25149f4a20af32d249c801, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LookoutTower.ProximitySound
+  sound:
+    clip: {fileID: 8300000, guid: 2b6aa5f1f270b44bf8968ab5cd3ffa25, type: 3}
+    start: 12.8
+    length: 1.5
+    volume: 0.45
+    pitch: 1
+    pitchJitter: 0.06
+  radius: 1.1
+  rearmMargin: 0.6
 --- !u!1 &6630280504490347797
 GameObject:
   m_ObjectHideFlags: 0
@@ -4198,6 +4668,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -4786,6 +5284,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -4833,6 +5359,13 @@ MonoBehaviour:
   glassUp: {x: 0, y: 1, z: 0}
   interiorNormal: {x: -0, y: -0, z: -1}
   surfaceOffset: 0.004
+  revealSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onRevealed:
     m_PersistentCalls:
       m_Calls: []
@@ -5164,6 +5697,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -5341,6 +5902,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -5642,6 +6231,34 @@ MonoBehaviour:
   openClip: {fileID: 0}
   closeClip: {fileID: 0}
   lockedClip: {fileID: 0}
+  openSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 0
+    length: 1.6
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closeSound:
+    clip: {fileID: 8300000, guid: c7e6dd2496ca243dbbfc9a8163c1a787, type: 3}
+    start: 3
+    length: 1.9
+    volume: 0.8
+    pitch: 1
+    pitchJitter: 0.06
+  closedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
+  lockedSound:
+    clip: {fileID: 0}
+    start: 0
+    length: 0
+    volume: 0
+    pitch: 0
+    pitchJitter: 0
   onOpened:
     m_PersistentCalls:
       m_Calls: []
@@ -5706,8 +6323,37 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1456547538247811077, guid: f5455ac08cb95488da5dc36fed24aa6d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4553207743437965522}
   m_SourcePrefab: {fileID: 100100000, guid: f5455ac08cb95488da5dc36fed24aa6d, type: 3}
+--- !u!1 &1222049467564342890 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1456547538247811077, guid: f5455ac08cb95488da5dc36fed24aa6d, type: 3}
+  m_PrefabInstance: {fileID: 343159506590219887}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4553207743437965522
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1222049467564342890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4b76169d25149f4a20af32d249c801, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LookoutTower.ProximitySound
+  sound:
+    clip: {fileID: 8300000, guid: 2b6aa5f1f270b44bf8968ab5cd3ffa25, type: 3}
+    start: 12.8
+    length: 1.5
+    volume: 0.45
+    pitch: 1
+    pitchJitter: 0.06
+  radius: 1.1
+  rearmMargin: 0.6
 --- !u!4 &1826797190040505321 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2132792649526048134, guid: f5455ac08cb95488da5dc36fed24aa6d, type: 3}
@@ -6504,6 +7150,58 @@ PrefabInstance:
       propertyPath: m_Name
       value: Prop_FireFinder
       objectReference: {fileID: 0}
+    - target: {fileID: 4985867324296051561, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: turnSound.clip
+      value: 
+      objectReference: {fileID: 8300000, guid: ca5d99a9364e94c3bb3458e08bcc0c24, type: 3}
+    - target: {fileID: 4985867324296051561, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: turnSound.pitch
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4985867324296051561, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: turnSound.start
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4985867324296051561, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: turnSoundSpread
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 4985867324296051561, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: turnSound.length
+      value: 0.35
+      objectReference: {fileID: 0}
+    - target: {fileID: 4985867324296051561, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: turnSound.volume
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 4985867324296051561, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: turnSound.pitchJitter
+      value: 0.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 5679121389350140083, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: alignedSoundAt
+      value: 
+      objectReference: {fileID: 6779616447898752711}
+    - target: {fileID: 5679121389350140083, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: alignedSound.clip
+      value: 
+      objectReference: {fileID: 8300000, guid: 887475bb81fac437faa2dae2aa8ff7c1, type: 3}
+    - target: {fileID: 5679121389350140083, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: alignedSound.pitch
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5679121389350140083, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: alignedSound.start
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 5679121389350140083, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: alignedSound.length
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 5679121389350140083, guid: d932bd2eaa94141b19196ee109499587, type: 3}
+      propertyPath: alignedSound.volume
+      value: 0.55
+      objectReference: {fileID: 0}
     - target: {fileID: 9079212020063113492, guid: d932bd2eaa94141b19196ee109499587, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.05
@@ -6733,8 +7431,37 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5196648827067042451, guid: b2e8fe933608c4320999924a3c242f5e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1657934515526920988}
   m_SourcePrefab: {fileID: 100100000, guid: b2e8fe933608c4320999924a3c242f5e, type: 3}
+--- !u!1 &2697390327582418474 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5196648827067042451, guid: b2e8fe933608c4320999924a3c242f5e, type: 3}
+  m_PrefabInstance: {fileID: 7886148903246490809}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1657934515526920988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2697390327582418474}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4b76169d25149f4a20af32d249c801, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LookoutTower.ProximitySound
+  sound:
+    clip: {fileID: 8300000, guid: 2b6aa5f1f270b44bf8968ab5cd3ffa25, type: 3}
+    start: 12.8
+    length: 1.5
+    volume: 0.45
+    pitch: 1
+    pitchJitter: 0.06
+  radius: 1.1
+  rearmMargin: 0.6
 --- !u!4 &8662676922342484905 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1533819161248352016, guid: b2e8fe933608c4320999924a3c242f5e, type: 3}

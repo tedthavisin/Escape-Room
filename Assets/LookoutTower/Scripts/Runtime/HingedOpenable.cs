@@ -39,6 +39,13 @@ namespace LookoutTower
         public AudioSource audioSource;
         public AudioClip openClip, closeClip, lockedClip;
 
+        [Header("Sounds (played at the leaf; used instead of the clips above when set)")]
+        public SoundCue openSound;
+        public SoundCue closeSound;
+        [Tooltip("When it shuts fully: the latch or the lid landing.")]
+        public SoundCue closedSound;
+        public SoundCue lockedSound;
+
         public UnityEvent onOpened = new UnityEvent();
         public UnityEvent onClosed = new UnityEvent();
         public UnityEvent onLockedAttempt = new UnityEvent();
@@ -86,10 +93,10 @@ namespace LookoutTower
             if (locked)
             {
                 onLockedAttempt.Invoke();
-                Play(lockedClip);
+                Play(lockedSound, lockedClip);
                 return false;
             }
-            if (_target < 1f) Play(openClip);
+            if (_target < 1f) Play(openSound, openClip);
             _target = 1f;
             return true;
         }
@@ -97,7 +104,7 @@ namespace LookoutTower
         public void Close()
         {
             Init();
-            if (_target > 0f) Play(closeClip);
+            if (_target > 0f) Play(closeSound, closeClip);
             _target = 0f;
         }
 
@@ -129,7 +136,11 @@ namespace LookoutTower
                 return;
             }
             if (_current >= 1f && prev < 1f) onOpened.Invoke();
-            if (_current <= 0f && prev > 0f) onClosed.Invoke();
+            if (_current <= 0f && prev > 0f)
+            {
+                Play(closedSound, null);
+                onClosed.Invoke();
+            }
         }
 
         void Apply()
@@ -171,9 +182,16 @@ namespace LookoutTower
             return true;
         }
 
-        void Play(AudioClip clip)
+        void Play(in SoundCue cue, AudioClip clip)
         {
-            if (audioSource != null && clip != null) audioSource.PlayOneShot(clip);
+            if (cue.IsSet) Sfx.Play(cue, LeafCentre(), 1f, 18f);
+            else if (audioSource != null && clip != null) audioSource.PlayOneShot(clip);
+        }
+
+        Vector3 LeafCentre()
+        {
+            if (_leaf == null) TryGetComponent(out _leaf);
+            return _leaf != null ? transform.TransformPoint(_leaf.center) : transform.position;
         }
 
         static string Capitalise(string s) => string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s.Substring(1);

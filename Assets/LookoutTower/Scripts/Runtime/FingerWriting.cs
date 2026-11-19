@@ -31,12 +31,17 @@ namespace LookoutTower
                               0.46f, 0f) },
         };
 
+        /// <summary>'_': a short finger dash along the bottom of the cell, marking a slot without a digit.</summary>
+        static readonly Vector2[][] Dash = { P(0.04f, 0.02f, 0.3f, 0.0f, 0.57f, 0.03f) };
+
         public const float CellAspect = 0.6f;
+        /// <summary>Space between slots, as a fraction of the digit height.</summary>
+        public const float SlotGap = 0.55f;
 
         /// <summary>
         /// Draws <paramref name="text"/> into <paramref name="mask"/> (row-major, values 0..1, max-blended).
         /// The mask covers <paramref name="areaSize"/> metres; text is centred on <paramref name="centre"/> (metres from
-        /// the mask's lower-left corner). Characters other than digits leave a gap. Returns the text's bounds in metres.
+        /// the mask's lower-left corner). '_' draws a dash; any other non-digit leaves a gap. Returns the text's bounds in metres.
         /// </summary>
         public static Rect Draw(float[] mask, int w, int h, Vector2 areaSize, string text, Vector2 centre, float digitHeight,
                                 float strokeWidth, float splitGap, int seed)
@@ -44,7 +49,7 @@ namespace LookoutTower
             if (string.IsNullOrEmpty(text)) return default;
             var rng = new System.Random(seed);
             float cellW = digitHeight * CellAspect;
-            float pitch = cellW + digitHeight * 0.32f;
+            float pitch = cellW + digitHeight * SlotGap;
             int n = text.Length;
             bool split = splitGap > 0f && n % 2 == 0;
             float totalW = n * cellW + (n - 1) * (pitch - cellW) + (split ? splitGap : 0f);
@@ -56,12 +61,14 @@ namespace LookoutTower
             {
                 float cx = x0 + c * pitch + (split && c >= n / 2 ? splitGap : 0f);
                 int d = text[c] - '0';
-                if (d < 0 || d > 9) continue;
+                Vector2[][] glyph = d >= 0 && d <= 9 ? Glyphs[d] : text[c] == '_' ? Dash : null;
+                if (glyph == null) continue;
                 // A hand isn't a printer: each digit leans, sits and sizes a little differently.
                 float slant = 0.12f + Rand(rng, -0.06f, 0.06f);
                 float scale = 1f + Rand(rng, -0.05f, 0.05f);
-                float dy = Rand(rng, -0.08f, 0.08f) * digitHeight;
-                foreach (var stroke in Glyphs[d])
+                // Dashes all sit on the same line, so they read as blanks in a row rather than stray marks.
+                float dy = glyph == Dash ? Rand(rng, -0.015f, 0.015f) * digitHeight : Rand(rng, -0.08f, 0.08f) * digitHeight;
+                foreach (var stroke in glyph)
                 {
                     var pts = new List<Vector2>(stroke.Length);
                     foreach (var p in stroke)

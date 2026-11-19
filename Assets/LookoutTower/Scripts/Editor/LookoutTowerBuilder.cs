@@ -774,6 +774,7 @@ namespace LookoutTower.EditorTools
         static GameObject BuildTowerPrefab(Dictionary<string, PropInfo> props)
         {
             var breathFog = CaptureBreathFogWindows();
+            var puzzleProps = PuzzleProps.Capture();
             var root = InstantiateModel(TowerFbx);
             root.name = "LookoutTower";
             var children = root.transform.Cast<Transform>().ToList();
@@ -809,6 +810,7 @@ namespace LookoutTower.EditorTools
             }
 
             AddBreathFogWindows(openRoot, breathFog);
+            PuzzleProps.Restore(root.transform, puzzleProps);
 
             // props (nested prefab instances)
             var propRoot = new GameObject("Cab_Props").transform;
@@ -877,6 +879,7 @@ namespace LookoutTower.EditorTools
                 h.openAngle = 105f;
                 h.displayName = "trapdoor";
                 h.speed = 90f;
+                h.onlyCharactersInOpening = true;   // closable from above while standing at the hatch's edge
                 // Collide with the lid and its battens only (top 6 cm): the bounds box also wrapped the pull handle
                 // underneath, which made the open lid stick out over the ladder.
                 var bc = go.GetComponent<BoxCollider>();

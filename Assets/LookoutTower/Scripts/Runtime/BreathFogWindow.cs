@@ -4,22 +4,24 @@ using UnityEngine.Events;
 namespace LookoutTower
 {
     /// <summary>
-    /// A window that fogs up where the player breathes on it, revealing a code someone once wrote on the glass with a
-    /// fingertip (the finger left the glass clean, so the writing stays clear while the fog forms around it).
+    /// A window that fogs up where the player breathes on it, revealing part of the lock code someone once wrote on the
+    /// glass with a fingertip (the finger left the glass clean, so the writing stays clear while the fog forms around it).
     ///
     /// Put it on a window sash. Lean in close to the glass from inside the cab, face it and breathe out: the mic
     /// (<see cref="BreathSensor"/>) says how hard, the head position says where. Fog builds up under the breath, lingers
     /// for a few seconds, then evaporates from the thin edges inwards.
     ///
-    /// For the lock: read <see cref="Code"/> or call <see cref="CheckCode"/>; listen to <see cref="onRevealed"/> if
-    /// something should happen the first time the player sees the number.
+    /// The glass only gives away some digits of the lock code: by default "__8_", the 3rd digit of 1789, with finger
+    /// dashes for the others. For the lock: <see cref="CheckCode"/> says whether an attempt agrees with the digits
+    /// written here; listen to <see cref="onRevealed"/> if something should happen the first time the player sees it.
     /// </summary>
     [DisallowMultipleComponent]
     public class BreathFogWindow : MonoBehaviour
     {
         [Header("Hidden code")]
-        [Tooltip("Digits written on the glass. The lock compares against this.")]
-        public string code = "2741";
+        [Tooltip("What's written on the glass, one slot per character: a digit, '_' for a finger dash (a digit the " +
+                 "player has to find elsewhere), or a space for an empty slot.")]
+        public string code = "__8_";
         [Tooltip("Centre of the writing, in metres from the centre of the glass (x right, y up, seen from inside).")]
         public Vector2 writingCentre = new Vector2(0f, -0.24f);
         public float digitHeight = 0.11f;
@@ -77,7 +79,16 @@ namespace LookoutTower
         /// <summary>True while breath is landing on this glass.</summary>
         public bool IsBeingBreathedOn { get; private set; }
 
-        public bool CheckCode(string attempt) => attempt != null && attempt.Trim() == code;
+        /// <summary>True if <paramref name="attempt"/> has the same digits in the slots this window shows (blanks match anything).</summary>
+        public bool CheckCode(string attempt)
+        {
+            if (attempt == null) return false;
+            attempt = attempt.Trim();
+            if (attempt.Length != code.Length) return false;
+            for (int i = 0; i < code.Length; i++)
+                if (char.IsDigit(code[i]) && attempt[i] != code[i]) return false;
+            return true;
+        }
 
         // simulation
         const float CellSize = 0.025f;
@@ -451,7 +462,7 @@ namespace LookoutTower
             Gizmos.DrawWireCube(Vector3.zero, new Vector3(glassSize.x, glassSize.y, 0f));
             float cw = digitHeight * FingerWriting.CellAspect;
             int n = string.IsNullOrEmpty(code) ? 0 : code.Length;
-            float w = n * cw + Mathf.Max(0, n - 1) * digitHeight * 0.32f + (n % 2 == 0 ? centreGap : 0f);
+            float w = n * cw + Mathf.Max(0, n - 1) * digitHeight * FingerWriting.SlotGap + (n % 2 == 0 ? centreGap : 0f);
             Gizmos.color = new Color(1f, 0.8f, 0.3f, 0.9f);
             Gizmos.DrawWireCube(new Vector3(writingCentre.x, writingCentre.y, 0f), new Vector3(w, digitHeight, 0f));
             Gizmos.DrawLine(Vector3.zero, new Vector3(0f, 0f, -reach));

@@ -59,23 +59,39 @@ trapdoor.Unlock(); trapdoor.Open();    // e.g. when a puzzle is solved
 
 - `openAngle`, `speed`, `locked`, `startOpen`, plus `onOpened` / `onClosed` / `onLockedAttempt` events.
 - A swing pauses instead of pushing through a player standing in the way (`stopAtCharacters`), so you
-  can't open the trapdoor while standing on it or close it on someone's head.
+  can't open the trapdoor while standing on it or close it on someone's head. The trapdoor only counts someone
+  actually in the opening (`onlyCharactersInOpening`), so you can close it from the cab while standing at its edge.
 - The fire finder has `TurnOnInteract` (15° steps, `CurrentAngle`, `onTurned`) for azimuth puzzles.
 - `LanternFlicker.sputter` (0–1) makes the lantern gutter for scares.
 - **Breath-fog window** (`BreathFogWindow` on `Openables/Window_N2`, the middle north window): lean in close to the
-  glass from inside the cab, face it and breathe out. The glass fogs up where the breath lands, and a code someone
-  wrote with a fingertip shows up as clear strokes in the fog (lower panes, about chest height). The fog lingers ~4 s,
-  then evaporates from the edges in ~10 s.
-  - Set the code on the **tower prefab** (`code`, default `2741`), not on the scene instance: Build Everything keeps
-    the prefab's settings (and whichever window you moved the component to) but regenerates the scene.
-  - For the lock: `fogWindow.Code` / `fogWindow.CheckCode("2741")`; `onRevealed` fires the first time the code is
-    readable, `onCodeVisibleChanged(bool)` every time it appears or fades. `FogNow()` fogs it instantly (hints).
-  - Breath comes from the microphone via `BreathSensor` (auto-created; add it to any object to tune thresholds, or
-    tick `logLevels` to see mic levels). Hold **B** to breathe without a mic, or tick `simulateBreath` in Play mode.
+  glass from inside the cab, face it and breathe out. The glass fogs up where the breath lands, and finger writing
+  shows up as clear strokes in the fog (lower panes, about chest height): `_ _ 8 _`, the third digit of the exit
+  code 1789. The fog lingers ~4 s, then evaporates from the edges in ~10 s.
+  - `code` is what's written, one slot per character: a digit, `_` for a finger dash, or a space for nothing.
+    Set it on the **tower prefab**, not on the scene instance: Build Everything keeps the prefab's settings (and
+    whichever window you moved the component to) but regenerates the scene.
+  - For the lock: `fogWindow.CheckCode("1789")` is true when an attempt agrees with the digits on the glass (blanks
+    match anything); `onRevealed` fires the first time the writing is readable, `onCodeVisibleChanged(bool)` every
+    time it appears or fades. `FogNow()` fogs it instantly (hints).
+  - **Hint:** a ranger's note pinned at eye height to the wall post just north of the desk (east wall, beside the
+    radio, `Puzzles/Note_FogHint`): *"Oct 3. Night watch. The
+    north window fogs every time I lean in to look for smoke. Wrote the third number there so I'd stop forgetting
+    it."*
+  - A brass compass on the desk in front of the radio (`Puzzles/Prop_Compass`) shows which wall is north: its red
+    needle (`CompassNeedle`) swings round to world +Z, whichever way the compass is turned. It's placed square to the
+    cab, so the dial's N and the needle point at the north wall in the Editor too.
+  - Breath comes from the microphone via `BreathSensor`, tuned so casual talking at the glass fogs it as well as
+    breathing out (8 dB above the room's noise to start, full strength at 16 dB; the room's noise is a low point of the last 6 s of sound). It's auto-created at Play, so
+    Inspector tweaks reset; change the defaults in `BreathSensor.cs`, or add the component to an object in the scene
+    to keep your own values. Tick `logLevels` to see mic levels. Hold **B** to breathe without a mic, or tick `simulateBreath` in Play mode.
     The Quest asks for microphone permission on first launch (`RECORD_AUDIO` is in the Android manifest).
   - Reach is 0.5 m from the mouth, so the desktop explorer works standing at the wall; in VR players lean in.
   - Move the writing with `writingCentre` / `digitHeight` (the gizmo shows the area when the window is selected);
     after moving the component to another window, use *Fit To Glass* from its context menu.
+- **Puzzle props** live in the tower prefab's `Puzzles` group. Build Everything puts every prefab instance in that
+  group back where you left it, so add new puzzle props there. `Tools ▸ Lookout Tower ▸ Build Puzzle Props`
+  regenerates the props in `Prefabs/Puzzles/` (the note's text is in `PuzzleProps.cs`) and resets their placement.
+  A rebuild also adds back any default prop (the note, the compass) missing from the group.
 - Anything implementing `IInteractable` (`Prompt`, `Interact()`) works with the desktop explorer, and a
   VR interactor can call the same `Interact()` later.
 

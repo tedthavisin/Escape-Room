@@ -39,9 +39,9 @@ namespace LookoutTower.EditorTools
         internal const int LowFlights = 20;      // switchback flights, 8 risers each
 
         /// <summary>Bump when the builder's output changes, so older builds get offered a rebuild.</summary>
-        public const int BuilderVersion = 9;
+        public const int BuilderVersion = 10;
         /// <summary>One line for the rebuild prompt: what changed in this builder version.</summary>
-        public const string WhatChanged = "fire finder puzzle: sight the smoke circled on the wall map and the ranger's lamp answers (digit 7)";
+        public const string WhatChanged = "light snowfall that follows the player and stays out of the cab";
         static string StampPath => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "LookoutTowerSource", "builder_version.txt"));
 
         public static int BuiltVersion()
@@ -248,7 +248,9 @@ namespace LookoutTower.EditorTools
                 EditorUtility.SetDirty(m);
             }
             // night sky
-            var skyShader = Shader.Find("Skybox/Panoramic");
+            // LookoutTower/NightSkyClouds = Skybox/Panoramic's sampling (same look, same horizon/fog match) + a cloud layer
+            var cloudShader = Shader.Find("LookoutTower/NightSkyClouds");
+            var skyShader = cloudShader != null ? cloudShader : Shader.Find("Skybox/Panoramic");
             var skyTex = Tex("T_SkyNight");
             if (skyShader != null && skyTex != null)
             {
@@ -263,9 +265,73 @@ namespace LookoutTower.EditorTools
                 sky.SetFloat("_ImageType", 0f);
                 sky.SetFloat("_Exposure", 1.2f);   // measured: below-horizon sky then renders exactly FogColor (28,34,46), so the terrain edge vanishes into it
                 sky.SetFloat("_Rotation", 0f);
+                if (cloudShader != null)
+                {
+                    // overcast snow-night: mostly cloud, a few breaks showing stars, drifting slowly
+                    sky.SetTexture("_CloudNoise", CloudNoiseTexture());
+                    sky.SetColor("_CloudColor", new Color(0.2f, 0.22f, 0.28f, 1f));   // a touch lighter than the night sky: moonlit undersides
+                    sky.SetFloat("_CloudCoverage", 0.6f);
+                    sky.SetFloat("_CloudSoftness", 0.1f);
+                    sky.SetFloat("_CloudOpacity", 0.93f);
+                    sky.SetFloat("_CloudScale", 0.16f);
+                    sky.SetVector("_CloudSpeed", new Vector4(0.0035f, 0.0018f, 0.006f, 0.003f));
+                    sky.SetFloat("_HorizonFade", 0.22f);
+                }
                 EditorUtility.SetDirty(sky);
             }
             AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// Tileable fractal value noise (256², linear R) for the sky's cloud layer, generated once into Textures.
+        /// Every octave's lattice wraps at the texture edge, so the clouds tile without seams as they drift.
+        /// </summary>
+        static Texture2D CloudNoiseTexture()
+        {
+            string path = $"{TexDir}/T_CloudNoise.png";
+            var existing = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (existing != null) return existing;
+            const int n = 256;
+            var rnd = new System.Random(4711);
+            var acc = new float[n * n];
+            float amp = 1f, total = 0f;
+            for (int period = 4; period <= 64; period *= 2)
+            {
+                var lattice = new float[period * period];
+                for (int i = 0; i < lattice.Length; i++) lattice[i] = (float)rnd.NextDouble();
+                for (int y = 0; y < n; y++)
+                    for (int x = 0; x < n; x++)
+                    {
+                        float fx = x * period / (float)n, fy = y * period / (float)n;
+                        int x0 = (int)fx, y0 = (int)fy, x1 = (x0 + 1) % period, y1 = (y0 + 1) % period;
+                        float tx = fx - x0, ty = fy - y0;
+                        tx = tx * tx * (3f - 2f * tx);
+                        ty = ty * ty * (3f - 2f * ty);
+                        float a = Mathf.Lerp(lattice[y0 * period + x0], lattice[y0 * period + x1], tx);
+                        float b = Mathf.Lerp(lattice[y1 * period + x0], lattice[y1 * period + x1], tx);
+                        acc[y * n + x] += Mathf.Lerp(a, b, ty) * amp;
+                    }
+                total += amp;
+                amp *= 0.55f;
+            }
+            float lo = float.MaxValue, hi = float.MinValue;
+            foreach (float v in acc) { lo = Mathf.Min(lo, v); hi = Mathf.Max(hi, v); }
+            var t = new Texture2D(n, n, TextureFormat.RGB24, false, true);
+            for (int i = 0; i < acc.Length; i++)
+            {
+                float v = (acc[i] - lo) / Mathf.Max(1e-5f, hi - lo);
+                t.SetPixel(i % n, i / n, new Color(v, v, v));
+            }
+            File.WriteAllBytes(Path.GetFullPath(path), t.EncodeToPNG());
+            Object.DestroyImmediate(t);
+            AssetDatabase.ImportAsset(path);
+            var imp = (TextureImporter)AssetImporter.GetAtPath(path);
+            imp.sRGBTexture = false;
+            imp.wrapMode = TextureWrapMode.Repeat;
+            imp.mipmapEnabled = true;
+            imp.textureCompression = TextureImporterCompression.Uncompressed;
+            imp.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
         static void SetupLit(Material m, MatSpec s)
@@ -1511,6 +1577,7 @@ namespace LookoutTower.EditorTools
                 wind.transform.SetParent(env, false);
                 wind.transform.rotation = Quaternion.Euler(0f, 40f, 0f);
             }
+            BuildSnow(env, tower);
             var forest = new GameObject("Forest").transform;
             forest.SetParent(env, false);
             var placed = new List<Vector3>();
@@ -1704,6 +1771,204 @@ namespace LookoutTower.EditorTools
             return lamp.transform;
         }
 
+        // ================================================================== snow
+        const float SnowBoxSize = 30f;        // emitter box (m), centred over the camera; fog hides its edge
+        const float SnowHeightAbove = 12f;
+        const float SnowRate = 260f;          // flakes per second: steady light snow
+        const float SnowLifetime = 16f;
+        const int SnowMaxParticles = 4500;
+        const float CabInnerHalf = 3.5f, CabCeiling = 2.75f;   // cab interior (7.06 m across, 2.75 m to the ceiling)
+
+        /// <summary>
+        /// Light snowfall that follows the player (SnowFollow), drifts with the scene's WindZone, and is killed inside
+        /// the cab by a trigger box (the Trigger module), so it snows outside the windows but never indoors.
+        /// </summary>
+        static void BuildSnow(Transform env, GameObject tower)
+        {
+            var go = new GameObject("Snow");
+            go.transform.SetParent(env, false);
+            var spawn = FindChild(tower.transform, "CabSpawn");
+            go.transform.position = (spawn != null ? spawn.position : new Vector3(0f, FloorY, 0f)) + Vector3.up * SnowHeightAbove;
+
+            var ps = go.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main;
+            main.loop = true;
+            main.prewarm = true;
+            main.duration = 5f;
+            main.startLifetime = SnowLifetime;
+            main.startSpeed = 0f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.035f, 0.07f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 1f, 1f, 0.7f), Color.white);   // some flakes fainter
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, 2f * Mathf.PI);   // irregular flakes, every way up
+            main.gravityModifier = 0f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = SnowMaxParticles;
+            main.playOnAwake = true;
+
+            var emission = ps.emission;
+            emission.rateOverTime = SnowRate;
+
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.scale = new Vector3(SnowBoxSize, 1f, SnowBoxSize);
+
+            // a steady fall (gravity would keep accelerating it) with a little flutter and wind drift
+            var vel = ps.velocityOverLifetime;
+            vel.enabled = true;
+            vel.space = ParticleSystemSimulationSpace.World;
+            vel.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+            vel.y = new ParticleSystem.MinMaxCurve(-1.4f, -1.05f);
+            vel.z = new ParticleSystem.MinMaxCurve(0f, 0f);
+
+            var noise = ps.noise;
+            noise.enabled = true;
+            noise.strength = 0.25f;
+            noise.frequency = 0.4f;
+            noise.scrollSpeed = 0.2f;
+            noise.quality = ParticleSystemNoiseQuality.Low;
+
+            // a slow tumble as they fall
+            var spin = ps.rotationOverLifetime;
+            spin.enabled = true;
+            spin.z = new ParticleSystem.MinMaxCurve(-0.7f, 0.7f);   // rad/s, random per flake
+
+            // four irregular flake shapes in a 2×2 sheet: each flake picks one at random and keeps it
+            var sheet = ps.textureSheetAnimation;
+            sheet.enabled = true;
+            sheet.mode = ParticleSystemAnimationMode.Grid;
+            sheet.numTilesX = 2;
+            sheet.numTilesY = 2;
+            sheet.animation = ParticleSystemAnimationType.WholeSheet;
+            sheet.frameOverTime = new ParticleSystem.MinMaxCurve(0f, 0.999f);
+            sheet.cycleCount = 1;
+
+            var forces = ps.externalForces;
+            forces.enabled = true;
+            forces.multiplier = 0.08f;   // the CTI WindZone (main 1.0) is tuned for trees: at 0.3 flakes streamed sideways at ~3.6 m/s
+
+            // keep it out of the cab: a trigger box over the interior kills any flake inside it. It's a separate,
+            // fixed object (a child of Snow would follow the camera); every interaction query ignores triggers.
+            var blockerGo = new GameObject("Cab Snow Blocker");
+            blockerGo.transform.SetParent(env, false);
+            blockerGo.transform.position = new Vector3(0f, FloorY + CabCeiling * 0.5f - 0.05f, 0f);
+            var blocker = blockerGo.AddComponent<BoxCollider>();
+            blocker.isTrigger = true;
+            blocker.size = new Vector3(CabInnerHalf * 2f, CabCeiling + 0.1f, CabInnerHalf * 2f);
+            var trigger = ps.trigger;
+            trigger.enabled = true;
+            trigger.inside = ParticleSystemOverlapAction.Kill;
+            trigger.enter = ParticleSystemOverlapAction.Kill;
+            trigger.exit = ParticleSystemOverlapAction.Ignore;
+            trigger.outside = ParticleSystemOverlapAction.Ignore;
+            trigger.AddCollider(blocker);
+
+            var r = go.GetComponent<ParticleSystemRenderer>();
+            r.renderMode = ParticleSystemRenderMode.Billboard;
+            r.alignment = ParticleSystemRenderSpace.Facing;   // faces the eye position: correct in VR too
+            r.sharedMaterial = SnowMaterial();
+            r.shadowCastingMode = ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            r.lightProbeUsage = LightProbeUsage.Off;
+            r.reflectionProbeUsage = ReflectionProbeUsage.Off;
+            r.sortMode = ParticleSystemSortMode.None;
+
+            var follow = go.AddComponent<SnowFollow>();
+            follow.heightAbove = SnowHeightAbove;
+            Log($"Snow: {SnowRate}/s over {SnowBoxSize} m, max {SnowMaxParticles}, kept out of the cab ({blocker.size})");
+        }
+
+        /// <summary>
+        /// Four irregular snowflake clumps in a 2×2 sheet (128 px, 64 px cells), generated once into Textures: each is a
+        /// few overlapping soft blobs of different sizes, some stretched, with a ragged edge, so flakes aren't discs.
+        /// </summary>
+        static Texture2D SnowflakeTexture()
+        {
+            string path = $"{TexDir}/T_SnowflakeSheet.png";
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (tex != null) return tex;
+            const int cell = 64, n = cell * 2;
+            var rnd = new System.Random(1312);
+            float Rf(float a, float b) => a + (b - a) * (float)rnd.NextDouble();
+            var t = new Texture2D(n, n, TextureFormat.RGBA32, false);
+            for (int c = 0; c < 4; c++)
+            {
+                int ox = (c % 2) * cell, oy = (c / 2) * cell;
+                // blobs: centre offset, radii (x, y), rotation
+                int blobs = rnd.Next(3, 7);
+                var bx = new float[blobs]; var by = new float[blobs]; var rx = new float[blobs]; var ry = new float[blobs]; var ba = new float[blobs];
+                for (int b = 0; b < blobs; b++)
+                {
+                    bx[b] = Rf(-9f, 9f); by[b] = Rf(-9f, 9f);
+                    float r = b == 0 ? Rf(9f, 13f) : Rf(4f, 9f);
+                    rx[b] = r * Rf(0.8f, 1.5f); ry[b] = r * Rf(0.55f, 1f); ba[b] = Rf(0f, Mathf.PI);
+                }
+                float edgePhase = Rf(0f, 6.28f);
+                for (int y = 0; y < cell; y++)
+                    for (int x = 0; x < cell; x++)
+                    {
+                        float px = x + 0.5f - cell * 0.5f, py = y + 0.5f - cell * 0.5f;
+                        float sum = 0f;
+                        for (int b = 0; b < blobs; b++)
+                        {
+                            float dx = px - bx[b], dy = py - by[b];
+                            float cs = Mathf.Cos(ba[b]), sn = Mathf.Sin(ba[b]);
+                            float u = (dx * cs + dy * sn) / rx[b], v = (-dx * sn + dy * cs) / ry[b];
+                            sum += Mathf.Exp(-(u * u + v * v) * 1.6f);
+                        }
+                        // ragged edge: wobble the threshold with angle
+                        float ang = Mathf.Atan2(py, px);
+                        float edge = 0.32f + 0.08f * Mathf.Sin(ang * 5f + edgePhase) + 0.05f * Mathf.Sin(ang * 11f + edgePhase * 2f);
+                        float a = Mathf.Clamp01((sum - edge) / 0.45f);
+                        a = a * a * (3f - 2f * a);
+                        // keep a clear border so neighbouring cells never bleed in
+                        float border = Mathf.Min(Mathf.Min(x, cell - 1 - x), Mathf.Min(y, cell - 1 - y));
+                        a *= Mathf.Clamp01(border / 4f);
+                        t.SetPixel(ox + x, oy + y, new Color(1f, 1f, 1f, a));
+                    }
+            }
+            File.WriteAllBytes(Path.GetFullPath(path), t.EncodeToPNG());
+            Object.DestroyImmediate(t);
+            AssetDatabase.ImportAsset(path);
+            var imp = (TextureImporter)AssetImporter.GetAtPath(path);
+            imp.alphaIsTransparency = true;
+            imp.wrapMode = TextureWrapMode.Clamp;
+            imp.mipmapEnabled = true;
+            imp.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        /// <summary>URP Particles/Unlit, alpha-blended, moonlit tint so flakes don't glow white at night; fog applies.</summary>
+        static Material SnowMaterial()
+        {
+            string path = $"{MatDir}/M_Snow.mat";
+            var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (m == null)
+            {
+                m = new Material(shader) { name = "M_Snow" };
+                AssetDatabase.CreateAsset(m, path);
+            }
+            else if (shader != null) m.shader = shader;
+            m.SetTexture("_BaseMap", SnowflakeTexture());
+            m.SetColor("_BaseColor", new Color(0.76f, 0.8f, 0.88f, 0.82f));   // moonlit grey-blue, softer than white: snow, not sparks
+            // transparent, alpha blend (what the URP material inspector would set)
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", 0f);
+            m.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+            m.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+            m.SetFloat("_SrcBlendAlpha", (float)BlendMode.One);
+            m.SetFloat("_DstBlendAlpha", (float)BlendMode.OneMinusSrcAlpha);
+            m.SetFloat("_ZWrite", 0f);
+            m.SetFloat("_SoftParticlesEnabled", 0f);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.DisableKeyword("_SOFTPARTICLES_ON");
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.renderQueue = (int)RenderQueue.Transparent;
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
         static Material BeaconGlowMaterial()
         {
             string path = $"{MatDir}/M_BeaconGlow.mat";
@@ -1760,6 +2025,7 @@ namespace LookoutTower.EditorTools
             new View("09_hatch_from_cab", new Vector3(-0.35f, FloorY + 1.6f, 0.95f), new Vector3(-1.24f, FloorY - 0.9f, -0.75f), 75f, true),
             new View("10_ladder_up_through_hatch", new Vector3(-1.24f, LowTopY + 1.55f, -1.45f), new Vector3(-1.24f, FloorY + 1.2f, 0.35f), 75f, true),
             new View("11_hatch_keypad", new Vector3(-0.7f, FloorY + 1.6f, -1.6f), new Vector3(-1.9f, FloorY + 0.9f, -0.1f), 70f),
+            new View("13_snow_from_catwalk", new Vector3(1.2f, FloorY + 1.6f, -4.15f), new Vector3(9f, FloorY - 6f, -30f), 70f),
         };
 
         public static string CaptureScreenshots()
@@ -1783,6 +2049,10 @@ namespace LookoutTower.EditorTools
             var sighting = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<FireFinderSighting>(true)).FirstOrDefault();
             var beacon = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<SightingBeacon>(true)).FirstOrDefault();
             Quaternion sightWas = sighting != null && sighting.sight != null ? sighting.sight.localRotation : Quaternion.identity;
+            // snow only simulates in play mode: settle it around each shot's camera before rendering
+            var snow = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<SnowFollow>(true))
+                            .Select(s => s.GetComponent<ParticleSystem>()).FirstOrDefault(p => p != null);
+            Vector3 snowWas = snow != null ? snow.transform.position : Vector3.zero;
             if (sighting != null && beacon != null && beacon.glow != null)
             {
                 Vector3 d = BearingDir(sighting.targetBearing);
@@ -1812,6 +2082,27 @@ namespace LookoutTower.EditorTools
                     cam.fieldOfView = v.fov;
                     go.transform.position = v.pos;
                     go.transform.LookAt(v.target);
+                    if (snow != null)
+                    {
+                        var follow = snow.GetComponent<SnowFollow>();
+                        Vector3 over = v.pos + Vector3.up * (follow != null ? follow.heightAbove : SnowHeightAbove);
+                        snow.transform.position = over;
+                        snow.Simulate(SnowLifetime, true, true);
+                        // like SnowFollow in play: shift the emitter upwind so the flakes at eye height surround the camera
+                        var flakes = new ParticleSystem.Particle[snow.main.maxParticles];
+                        int nf = snow.GetParticles(flakes);
+                        Vector3 sum = Vector3.zero;
+                        int band = 0;
+                        for (int i = 0; i < nf; i++)
+                            if (Mathf.Abs(flakes[i].position.y - v.pos.y) < 4f) { sum += flakes[i].position; band++; }
+                        if (band > 50)
+                        {
+                            Vector3 drift = sum / band - v.pos;
+                            drift.y = 0f;
+                            snow.transform.position = over - drift;
+                            snow.Simulate(SnowLifetime, true, true);
+                        }
+                    }
                     cam.Render();
                     var prev = RenderTexture.active;
                     RenderTexture.active = rt;
@@ -1827,6 +2118,11 @@ namespace LookoutTower.EditorTools
             finally
             {
                 if (sighting != null && sighting.sight != null) sighting.sight.localRotation = sightWas;
+                if (snow != null)
+                {
+                    snow.Clear(true);
+                    snow.transform.position = snowWas;
+                }
                 // put the trapdoor back the way it was saved (the hatch shots open it)
                 if (trap != null)
                 {

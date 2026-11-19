@@ -64,6 +64,7 @@ namespace LookoutTower
             if (leak != null)
             {
                 leak.enabled = false;
+                PrepareForQuest(leak);
                 _mpb = new MaterialPropertyBlock();
                 _leakPlaneY = leak.transform.position.y;
                 if (lamp != null) _leakDirLocal = lamp.transform.InverseTransformDirection(leak.transform.position - lamp.transform.position);
@@ -148,6 +149,44 @@ namespace LookoutTower
                 _hinted = true;
                 PuzzleHints.Show(hint);
             }
+        }
+
+        /// <summary>
+        /// Makes the decal draw on the Quest as it does on PC. Its material (URP Particles/Unlit) multiplies the texture
+        /// by the mesh's vertex colours, and the built-in quad has none: PC fills the missing colour in as white, but the
+        /// Quest can read it as black, and black added to the ceiling is nothing. So swap in the same quad with white
+        /// vertex colours. Also drop it to 8 mm under the ceiling (from 3 mm) so the headset's depth buffer can't
+        /// hide it behind the ceiling boards.
+        /// </summary>
+        static void PrepareForQuest(Renderer leak)
+        {
+            var mf = leak.GetComponent<MeshFilter>();
+            if (mf != null && mf.sharedMesh != null && mf.sharedMesh.colors32.Length == 0)
+            {
+                var src = mf.sharedMesh;
+                var mesh = new Mesh { name = src.name + " (white vertex colours)" };
+                if (src.isReadable)
+                {
+                    mesh.vertices = src.vertices;
+                    mesh.normals = src.normals;
+                    mesh.uv = src.uv;
+                    mesh.triangles = src.triangles;
+                }
+                else
+                {
+                    // Unity's built-in quad: faces -Z, UV (0,0) at the bottom left
+                    mesh.vertices = new[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f), new Vector3(0.5f, 0.5f, 0f) };
+                    mesh.normals = new[] { Vector3.back, Vector3.back, Vector3.back, Vector3.back };
+                    mesh.uv = new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 1f), new Vector2(1f, 1f) };
+                    mesh.triangles = new[] { 0, 3, 1, 3, 0, 2 };
+                }
+                var white = new Color32[mesh.vertexCount];
+                for (int i = 0; i < white.Length; i++) white[i] = new Color32(255, 255, 255, 255);
+                mesh.colors32 = white;
+                mesh.RecalculateBounds();
+                mf.sharedMesh = mesh;
+            }
+            leak.transform.position += Vector3.down * 0.005f;
         }
 
         // re-project the pattern from the (swinging) bulb onto the ceiling plane

@@ -39,9 +39,9 @@ namespace LookoutTower.EditorTools
         internal const int LowFlights = 20;      // switchback flights, 8 risers each
 
         /// <summary>Bump when the builder's output changes, so older builds get offered a rebuild.</summary>
-        public const int BuilderVersion = 9;
+        public const int BuilderVersion = 10;
         /// <summary>One line for the rebuild prompt: what changed in this builder version.</summary>
-        public const string WhatChanged = "fire finder puzzle: sight the smoke circled on the wall map and the ranger's lamp answers (digit 7)";
+        public const string WhatChanged = "Morse lamp puzzle: a signal lamp hanging from the cab ceiling blinks the 1st digit (1), with a Morse chart by the door";
         static string StampPath => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "LookoutTowerSource", "builder_version.txt"));
 
         public static int BuiltVersion()
@@ -574,7 +574,7 @@ namespace LookoutTower.EditorTools
         }
 
         /// <summary>Saves a generated mesh, updating the existing asset in place (keeps its GUID and references).</summary>
-        static Mesh SaveMeshAsset(Mesh mesh, string path)
+        internal static Mesh SaveMeshAsset(Mesh mesh, string path)
         {
             var existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if (existing == null) { AssetDatabase.CreateAsset(mesh, path); return mesh; }
@@ -1760,6 +1760,7 @@ namespace LookoutTower.EditorTools
             new View("09_hatch_from_cab", new Vector3(-0.35f, FloorY + 1.6f, 0.95f), new Vector3(-1.24f, FloorY - 0.9f, -0.75f), 75f, true),
             new View("10_ladder_up_through_hatch", new Vector3(-1.24f, LowTopY + 1.55f, -1.45f), new Vector3(-1.24f, FloorY + 1.2f, 0.35f), 75f, true),
             new View("11_hatch_keypad", new Vector3(-0.7f, FloorY + 1.6f, -1.6f), new Vector3(-1.9f, FloorY + 0.9f, -0.1f), 70f),
+            new View("13_morse_lamp", new Vector3(0.1f, FloorY + 1.6f, 0.4f), new Vector3(0.3f, FloorY + 1.75f, -3.5f), 70f),
         };
 
         public static string CaptureScreenshots()

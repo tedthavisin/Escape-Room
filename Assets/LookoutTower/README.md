@@ -44,6 +44,22 @@ cab puzzles. A wrong code shows *Denied* and clears.
   controller trigger through `XRInteractBridge`. The asset's own `KeypadInteractionFPV` isn't used: it reads the
   legacy Input Manager, and this project runs the Input System only.
 
+### Morse lamp puzzle (digit 1)
+
+A signal lamp hangs on a cord from the south ceiling beam, in line with the door (`Puzzles/Prop_MorseLamp`). It
+blinks **1** in Morse, `· − − − −`, then goes dark for 3 s and repeats. A paper tag hanging from the shade says
+**`X _ _ _`** on both sides: the digit is the first one in the code. A printed *Morse code / numbers* chart
+(`Puzzles/Note_MorseGuide`) is pinned on the strip of paneling just east of the door, so from the middle of the cab
+the lamp blinks right in front of it. The chart lists 1–6, so the player still has to read the signal.
+
+- `MorseLamp` (on `Prop_MorseLamp`): `message` (digits/letters), `unit` (dot length, 0.35 s; a dash is 3 units, 1 unit
+  dark between marks, 3 between characters), `pause`, `litEmission`; `IsLit` / `IsDash`, `LitAt(t)`, `Pattern`,
+  `onMark(bool dash)` for a click sound, `alwaysLit` for testing. The bulb uses its own `M_MorseBulb` material, and
+  the script switches its emission per renderer, with the `Signal Light` point light switching too.
+- The lamp's digit, the tag text and the chart's digits are constants at the top of `PuzzleProps.cs`
+  (`MorseLampMessage`, `MorseLampTag`, `MorseGuideDigits`). Both props sit in `Prefabs/Puzzles/`, so rebuilds keep
+  them where you move them. The lamp has no colliders: its bulb is 2.1 m up and the tag bottom ~1.98 m.
+
 ### Fire finder puzzle (digit 7)
 
 A dispatch note on the logbook says smoke was reported and circled on the wall map (south wall). The player finds
@@ -132,7 +148,7 @@ trapdoor.Unlock(); trapdoor.Open();    // e.g. when a puzzle is solved
   each instance of a prefab from `Prefabs/Puzzles/` back where you left it (the keypad has its own rebuild code),
   so add new puzzle props there. `Tools ▸ Lookout Tower ▸ Build Puzzle Props`
   regenerates the props in `Prefabs/Puzzles/` (the note's text is in `PuzzleProps.cs`) and resets their placement.
-  A rebuild also adds back any default prop (the note, the compass) missing from the group.
+  A rebuild also adds back any default prop (the note, the compass, the Morse lamp and chart) missing from the group.
 - Anything implementing `IInteractable` (`Prompt`, `Interact()`) works with the desktop explorer, and a
   VR interactor can call the same `Interact()` later.
 

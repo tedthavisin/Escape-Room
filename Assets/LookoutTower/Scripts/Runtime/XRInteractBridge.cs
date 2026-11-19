@@ -17,6 +17,8 @@ namespace LookoutTower
         public Transform rigRoot;
         public Transform cabSpawn;
         public float reach = 2.6f;
+        [Tooltip("Allow the Y/B cab jump. Turn off in the escape room: it skips the hatch lock (like the desktop's allowCabTeleport).")]
+        public bool allowCabJump = true;
 
         InputAction _leftTrigger, _rightTrigger, _cabJump;
         Vector3 _groundSpawn;
@@ -52,7 +54,7 @@ namespace LookoutTower
         {
             if (_leftTrigger.WasPressedThisFrame()) TryInteract(leftController);
             if (_rightTrigger.WasPressedThisFrame()) TryInteract(rightController);
-            if (_cabJump.WasPressedThisFrame()) CabJump();
+            if (_cabJump.WasPressedThisFrame() && allowCabJump) CabJump();
         }
 
         void TryInteract(Transform hand)

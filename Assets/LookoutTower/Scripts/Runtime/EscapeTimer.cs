@@ -202,6 +202,7 @@ namespace LookoutTower
         /// <summary>Reloads the current scene: a fresh game with a full clock.</summary>
         public static void RestartGame()
         {
+            FuseHands.Forget();   // carried fuses live in statics: don't let the old scene's (destroyed) ones fill the pocket
             var scene = SceneManager.GetActiveScene();
             if (scene.buildIndex >= 0) SceneManager.LoadScene(scene.buildIndex);
             else SceneManager.LoadScene(scene.name);

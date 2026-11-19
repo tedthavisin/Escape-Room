@@ -158,6 +158,7 @@ namespace LookoutTower
             if (!active || _cc == null || !_cc.enabled) return;
             // the escape timer and win screen freeze the player by switching the explorer off: stay frozen too
             if (_explorer != null && !_explorer.enabled) return;
+            if (_vrMode && ((_xr != null && !_xr.enabled) || WinScreen.Showing != null)) return;   // same in VR
             float dt = Time.deltaTime;
             if (dt <= 0f) return;
             if (_vrMode) UpdateVr(dt);

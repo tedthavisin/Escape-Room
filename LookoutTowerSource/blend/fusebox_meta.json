@@ -1,0 +1,115 @@
+{
+ "empties": {
+  "Socket_1": [
+   0.533,
+   -3.466,
+   32.055
+  ],
+  "SlotNumber_1": [
+   0.603,
+   -3.4719,
+   32.055
+  ],
+  "Socket_2": [
+   0.533,
+   -3.466,
+   31.94
+  ],
+  "SlotNumber_2": [
+   0.603,
+   -3.4719,
+   31.94
+  ],
+  "Socket_3": [
+   0.533,
+   -3.466,
+   31.825
+  ],
+  "SlotNumber_3": [
+   0.603,
+   -3.4719,
+   31.825
+  ],
+  "SparkPoint": [
+   0.533,
+   -3.444,
+   31.94
+  ],
+  "Label_On": [
+   0.55,
+   -3.4344,
+   31.661
+  ],
+  "Label_Off": [
+   0.55,
+   -3.4344,
+   31.519
+  ],
+  "Label_Warning": [
+   0.55,
+   -3.5084,
+   31.4625
+  ],
+  "Label_Fuses": [
+   0.55,
+   -3.4234,
+   32.163
+  ],
+  "DiagramCard": [
+   0.5495,
+   -3.4366,
+   31.94
+  ],
+  "Light_Ceiling": [
+   0.05,
+   0.0,
+   32.715
+  ],
+  "Light_Catwalk": [
+   0.0,
+   -3.77692,
+   32.85736
+  ],
+  "Label_Tin": [
+   2.95,
+   -0.63,
+   31.3212
+  ],
+  "TinSpot_1": [
+   2.95,
+   -0.63,
+   31.268
+  ],
+  "Label_Crate": [
+   1.15,
+   3.1589,
+   31.365
+  ],
+  "CrateSpot_1": [
+   1.05,
+   3.3,
+   31.3125
+  ],
+  "CrateSpot_2": [
+   1.15,
+   3.265,
+   31.3125
+  ]
+ },
+ "tris": {
+  "FuseBox_Panel": 2156,
+  "FuseBox_Door": 316,
+  "FuseBox_SwitchHandle": 164,
+  "FuseBox_Conduits": 3128,
+  "CeilingLamp": 898,
+  "CeilingLamp_Bulb": 192,
+  "CatwalkLamp": 532,
+  "CatwalkLamp_Globe": 128,
+  "FuseTin": 284,
+  "FuseTin_Lid": 292,
+  "PartsCrate": 910,
+  "PartsCrate_Lid": 96,
+  "Wall_Shelf": 176,
+  "Fuse": 610
+ }
+}

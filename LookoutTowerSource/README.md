@@ -9,6 +9,7 @@ python make_textures.py ../out_textures        # PBR texture sets (+ tiles.json)
 python make_sky.py ../out_textures/T_SkyNight.png
 python build_props.py ../out                    # LookoutTower.fbx + CabProps.fbx (+ Combined.blend)
 python build_forest.py ../out                   # Forest.fbx (+ Forest_preview.blend)
+python build_fusebox.py ../out                  # FuseBox.fbx (fuse box puzzle; --with-cab adds the cab for previews)
 ```
 
 - Dimensions live at the top of `build_tower.py` (cab size, floor height, stairs, hatch, windows).

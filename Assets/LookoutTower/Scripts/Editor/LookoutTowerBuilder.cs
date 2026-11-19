@@ -1283,6 +1283,8 @@ namespace LookoutTower.EditorTools
             probe.boxProjection = true;
             probe.resolution = 128;
 
+            // fuse box puzzle (Models/FuseBox.fbx, see FuseBoxPuzzleBuilder); skipped if the model isn't in the project
+            FuseBoxPuzzleBuilder.AttachToTower(root);
             GameAudioSetup.ApplyToTower(root);        // door/window/fire finder/fog/note sounds
             var prefab = SavePrefab(root, TowerPrefabPath);
             Object.DestroyImmediate(root);

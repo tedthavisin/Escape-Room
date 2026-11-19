@@ -147,8 +147,8 @@ trapdoor.Unlock(); trapdoor.Open();    // e.g. when a puzzle is solved
 - The fire finder has `TurnOnInteract` (15° steps, `CurrentAngle`, `onTurned`) for azimuth puzzles.
 - `LanternFlicker.sputter` (0–1) makes the lantern gutter for scares.
 - **Breath-fog window** (`BreathFogWindow` on `Openables/Window_N2`, the middle north window): lean in close to the
-  glass from inside the cab and face it: it fogs up on its own once your mouth is within `reach` (0.5 m), no microphone
-  needed (`fogByProximity`, `proximityBreath`); breathing out or talking at it fogs it faster. The glass fogs up where the breath lands, and finger writing
+  glass from inside the cab, face it and breathe out or talk at it (within `reach`, 0.5 m from the mouth). Tick
+  `fogByProximity` to have it fog just from leaning in, without the mic. The glass fogs up where the breath lands, and finger writing
   shows up as clear strokes in the fog (lower panes, about chest height): `_ _ 8 _`, the third digit of the exit
   code 1789. The fog lingers ~4 s, then evaporates from the edges in ~10 s.
   - `code` is what's written, one slot per character: a digit, `_` for a finger dash, or a space for nothing.

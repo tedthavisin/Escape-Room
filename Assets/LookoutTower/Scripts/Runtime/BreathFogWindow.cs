@@ -36,9 +36,9 @@ namespace LookoutTower
         public Vector3 mouthOffset = new Vector3(0f, -0.09f, 0.07f);
         [Tooltip("How far from the glass (metres) breath still reaches it.")]
         public float reach = 0.5f;
-        [Tooltip("Fog the glass just by leaning in close and facing it (within reach), no microphone needed. The mic, when it " +
-                 "hears you, still fogs it faster.")]
-        public bool fogByProximity = true;
+        [Tooltip("Also fog the glass just by leaning in close and facing it (within reach), no microphone needed. Off: the " +
+                 "player has to breathe or talk at the glass (the puzzle).")]
+        public bool fogByProximity;
         [Tooltip("Breath strength from leaning in (0..1): this right at the glass, half of it at the edge of reach.")]
         [Range(0f, 1f)] public float proximityBreath = 0.8f;
         [Tooltip("Fog build-up per second at full breath, right at the glass and at the edge of reach.")]

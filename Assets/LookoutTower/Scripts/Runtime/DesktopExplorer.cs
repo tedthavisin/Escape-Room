@@ -18,6 +18,8 @@ namespace LookoutTower
         public Light flashlight;
         [Tooltip("Where T teleports you (the cab). Leave empty to disable.")]
         public Transform cabSpawn;
+        [Tooltip("Allow the T teleport between where you started and the cab. Off in the escape room (it skips the hatch lock).")]
+        public bool allowCabTeleport = true;
 
         public float walkSpeed = 2.0f;
         public float sprintSpeed = 4.2f;
@@ -40,6 +42,7 @@ namespace LookoutTower
         string _toast;
         float _toastUntil;
         readonly RaycastHit[] _headHits = new RaycastHit[16];
+        readonly RaycastHit[] _focusHits = new RaycastHit[16];
 
         void Start()
         {
@@ -88,7 +91,7 @@ namespace LookoutTower
                 if (_focus is HingedOpenable h && h.locked) Toast($"The {h.displayName} won't budge.");
             }
             if (Pressed(Key.F) && flashlight != null) flashlight.enabled = !flashlight.enabled;
-            if (Pressed(Key.T) && cabSpawn != null) TeleportToggle();
+            if (Pressed(Key.T) && allowCabTeleport && cabSpawn != null) TeleportToggle();
         }
 
         /// <summary>Free height above the feet: a body-wide sphere swept straight up from just above the floor.</summary>
@@ -113,9 +116,49 @@ namespace LookoutTower
         {
             _focus = null;
             if (cam == null) return;
-            var ray = new Ray(cam.transform.position, cam.transform.forward);
-            if (Physics.Raycast(ray, out var hit, interactDistance, ~0, QueryTriggerInteraction.Ignore))
-                _focus = hit.collider.GetComponentInParent<IInteractable>();
+            var ray = InteractRay();
+            // Nearest hit that isn't the player: looking down (e.g. at the hatch keypad) the ray can clip our own
+            // capsule first, which used to swallow the interaction.
+            int n = Physics.RaycastNonAlloc(ray, _focusHits, interactDistance, ~0, QueryTriggerInteraction.Ignore);
+            Collider nearest = null;
+            float best = float.MaxValue;
+            for (int i = 0; i < n; i++)
+            {
+                var c = _focusHits[i].collider;
+                if (c == _cc || c.transform.IsChildOf(transform)) continue;
+                if (_focusHits[i].distance < best) { best = _focusHits[i].distance; nearest = c; }
+            }
+            if (nearest != null) _focus = nearest.GetComponentInParent<IInteractable>();
+        }
+
+        /// <summary>
+        /// The ray through the crosshair as the player sees it. When an XR runtime is running (Meta XR Simulator,
+        /// Quest Link) the camera renders in stereo and the Game view mirrors one eye, ~3 cm off the camera's centre,
+        /// so a ray from the centre lands a button-width away from what's under the crosshair.
+        /// </summary>
+        Ray InteractRay()
+        {
+            if (cam.stereoEnabled)
+            {
+                var mode = UnityEngine.XR.XRSettings.gameViewRenderMode;
+                if (mode == UnityEngine.XR.GameViewRenderMode.LeftEye) return EyeCentreRay(Camera.StereoscopicEye.Left);
+                if (mode == UnityEngine.XR.GameViewRenderMode.RightEye) return EyeCentreRay(Camera.StereoscopicEye.Right);
+            }
+            return new Ray(cam.transform.position, cam.transform.forward);
+        }
+
+        /// <summary>
+        /// Ray from an eye through the centre of that eye's image, from the matrices it renders with. Headset eye
+        /// frustums are lopsided (wider on the outside), so the image centre is ~15° off the camera's forward.
+        /// (Camera.ViewportPointToRay with an eye argument doesn't line up with the rendered image here.)
+        /// </summary>
+        Ray EyeCentreRay(Camera.StereoscopicEye eye)
+        {
+            Matrix4x4 eyeToWorld = cam.GetStereoViewMatrix(eye).inverse;
+            Matrix4x4 proj = cam.GetStereoProjectionMatrix(eye);
+            // view space looks down -Z; the image centre (NDC 0,0) is at x/-z = m02/m00, y/-z = m12/m11
+            var dirView = new Vector3(proj.m02 / proj.m00, proj.m12 / proj.m11, -1f);
+            return new Ray(eyeToWorld.GetColumn(3), eyeToWorld.MultiplyVector(dirView).normalized);
         }
 
         void TeleportToggle()

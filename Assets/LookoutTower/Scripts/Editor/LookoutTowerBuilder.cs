@@ -1092,8 +1092,13 @@ namespace LookoutTower.EditorTools
                 Log($"Hatch keypad skipped (trapdoor {(trap != null ? "found" : "missing")}, {KeypadPrefabPath} {(kpPrefab != null ? "found" : "missing")}).");
                 return;
             }
-            var puzzles = new GameObject("Puzzles").transform;
-            puzzles.SetParent(root, false);
+            // share the Puzzles group with the other puzzle props (PuzzleProps) if it's already there
+            var puzzles = root.Find("Puzzles");
+            if (puzzles == null)
+            {
+                puzzles = new GameObject("Puzzles").transform;
+                puzzles.SetParent(root, false);
+            }
 
             // pivot on the floor; the (centred) cube mesh sits on a child
             var post = new GameObject(HatchKeypadName);
@@ -1114,7 +1119,7 @@ namespace LookoutTower.EditorTools
             kpGo.transform.localPosition = keep.keepPose ? keep.kpPos : KeypadLocalPos;
             kpGo.transform.localRotation = keep.keepPose ? keep.kpRot : KeypadLocalRot;
             var keypad = kpGo.GetComponentInChildren<NavKeypad.Keypad>(true);
-            if (keypad == null) { Log("Hatch keypad: the keypad prefab has no Keypad component; skipped."); Object.DestroyImmediate(puzzles.gameObject); return; }
+            if (keypad == null) { Log("Hatch keypad: the keypad prefab has no Keypad component; skipped."); Object.DestroyImmediate(post); return; }
             var so = new SerializedObject(keypad);
             so.FindProperty("keypadCombo").intValue = keep.code;
             so.ApplyModifiedPropertiesWithoutUndo();
@@ -1136,6 +1141,7 @@ namespace LookoutTower.EditorTools
         static GameObject BuildTowerPrefab(Dictionary<string, PropInfo> props)
         {
             var breathFog = CaptureBreathFogWindows();
+            var puzzleProps = PuzzleProps.Capture();
             var hatchKeypad = CaptureHatchKeypad();
             var root = InstantiateModel(TowerFbx);
             root.name = "LookoutTower";
@@ -1172,6 +1178,7 @@ namespace LookoutTower.EditorTools
             }
 
             AddBreathFogWindows(openRoot, breathFog);
+            PuzzleProps.Restore(root.transform, puzzleProps);
             AddHatchKeypad(root.transform, openRoot, hatchKeypad);
 
             // props (nested prefab instances)
@@ -1248,6 +1255,7 @@ namespace LookoutTower.EditorTools
                 h.openAngle = 105f;
                 h.displayName = "trapdoor";
                 h.speed = 90f;
+                h.onlyCharactersInOpening = true;   // closable from above while standing at the hatch's edge
                 h.locked = true;   // the way out: HatchKeypadLock unlocks it when the keypad code is entered
                 // Collide with the lid and its battens only (top 6 cm): the bounds box also wrapped the pull handle
                 // underneath, which made the open lid stick out over the ladder.

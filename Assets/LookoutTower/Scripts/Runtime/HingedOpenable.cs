@@ -30,6 +30,11 @@ namespace LookoutTower
                  "e.g. someone on a trapdoor or with their head up through the hatch. Uses this object's BoxCollider.")]
         public bool stopAtCharacters = true;
 
+        [Tooltip("Only a character standing in the opening itself (on a closed trapdoor, or on the ladder with their " +
+                 "head up through the hatch) stops the swing; someone standing beside it doesn't. For trapdoors, where " +
+                 "the player closing the hatch from above is usually standing right at its edge.")]
+        public bool onlyCharactersInOpening;
+
         [Tooltip("Optional: plays when it starts opening/closing or when someone tries it while locked.")]
         public AudioSource audioSource;
         public AudioClip openClip, closeClip, lockedClip;
@@ -144,8 +149,26 @@ namespace LookoutTower
             int n = gameObject.scene.GetPhysicsScene().OverlapBox(centre, half, s_Hits, t.rotation, Physics.AllLayers,
                                                                  QueryTriggerInteraction.Ignore);
             for (int i = 0; i < n; i++)
-                if (s_Hits[i] is CharacterController) return true;
+                if (s_Hits[i] is CharacterController cc && (!onlyCharactersInOpening || InOpening(cc))) return true;
             return false;
+        }
+
+        /// <summary>
+        /// Is the character's centre inside the opening, i.e. within the closed leaf's outline seen along its thinnest
+        /// axis? (Standing on a closed trapdoor, or in the shaft under the hatch.)
+        /// </summary>
+        bool InOpening(CharacterController cc)
+        {
+            var t = transform;
+            Quaternion closedWorld = (t.parent != null ? t.parent.rotation : Quaternion.identity) * _closedRotation;
+            Vector3 p = Quaternion.Inverse(closedWorld) * (cc.bounds.center - t.position);
+            p = new Vector3(p.x / t.lossyScale.x, p.y / t.lossyScale.y, p.z / t.lossyScale.z) - _leaf.center;
+            Vector3 half = _leaf.size * 0.5f + Vector3.one * 0.05f;
+            Vector3 s = _leaf.size;
+            int thin = s.x < s.y ? (s.x < s.z ? 0 : 2) : (s.y < s.z ? 1 : 2);
+            for (int a = 0; a < 3; a++)
+                if (a != thin && Mathf.Abs(p[a]) > half[a]) return false;
+            return true;
         }
 
         void Play(AudioClip clip)

@@ -10,9 +10,9 @@ namespace LookoutTower
 {
     /// <summary>
     /// Listens to the microphone (the Quest headset mic, or the computer's mic in the Editor / Meta XR Simulator) and
-    /// reports how hard the player is breathing out, 0..1. Exhaling or blowing near the mic is much louder than the
-    /// room, so this is a loudness gate against a slowly tracked noise floor. Talking right at the glass counts too,
-    /// which is also true of real glass.
+    /// reports how hard the player is breathing out, 0..1. It's a loudness gate against the room's noise level (a low
+    /// point of the last few seconds of sound), tuned so casual talking at the glass counts as well as exhaling or
+    /// blowing (warm breath fogs glass either way).
     ///
     /// One sensor serves every <see cref="BreathFogWindow"/>. If the scene doesn't have one, the first window
     /// creates it with the defaults below; add this component to any object to tune it.
@@ -29,14 +29,20 @@ namespace LookoutTower
         public int sampleRate = 16000;
 
         [Header("Detection")]
-        [Tooltip("How far above the room's noise floor a breath must be (dB) to count at all.")]
-        public float thresholdAboveFloorDb = 12f;
-        [Tooltip("dB above the noise floor that counts as a full-strength breath.")]
-        public float fullAboveFloorDb = 28f;
+        [Tooltip("How far above the room's noise floor a breath must be (dB) to count at all. Casual talking close " +
+                 "to the mic sits roughly 10-20 dB above the room.")]
+        public float thresholdAboveFloorDb = 8f;
+        [Tooltip("dB above the noise floor that counts as a full-strength breath (normal speaking voice or a firm exhale).")]
+        public float fullAboveFloorDb = 16f;
         [Tooltip("Anything quieter than this (dBFS) is never a breath, however quiet the room is.")]
         public float absoluteMinDb = -50f;
-        [Tooltip("How fast the reading rises / falls (per second).")]
-        public float attack = 10f, release = 4f;
+        [Tooltip("How fast the reading rises / falls (per second). The slow fall carries it over the gaps between words.")]
+        public float attack = 10f, release = 1.5f;
+        [Tooltip("Seconds of recent sound the room's noise level is judged from.")]
+        public float floorWindowSeconds = 6f;
+        [Tooltip("The room's noise level is this low point of the recent sound: 0.2 = quieter than 80% of it. Speech " +
+                 "and breathing pause, so the room shows through the gaps; a fan or AC that keeps going becomes the room.")]
+        [Range(0.05f, 0.5f)] public float floorPercentile = 0.2f;
 
         [Header("Testing without a mic")]
         [Tooltip("Hold this key to breathe at full strength (desktop explorer, simulator, or when the mic is unavailable).")]
@@ -64,6 +70,11 @@ namespace LookoutTower
         readonly float[] _buf = new float[1024];
         float _warmUntil;
         float _floorDb = -60f;
+        // levels sampled 20 times a second over the floor window
+        const float HistoryRate = 20f;
+        readonly float[] _history = new float[256], _sorted = new float[256];
+        int _historyCount, _historyHead;
+        float _nextHistory;
         bool _permissionAsked;
         float _nextLog;
 
@@ -118,6 +129,8 @@ namespace LookoutTower
             _clip = Microphone.Start(_device, true, 1, rate);
             _readPos = -1;
             _floorDb = -50f;
+            _historyCount = _historyHead = 0;
+            _nextHistory = 0f;
             _warmUntil = Time.unscaledTime + 1f;
             if (_clip == null) Debug.LogWarning("[LookoutTower] Couldn't start the microphone.");
         }
@@ -163,22 +176,30 @@ namespace LookoutTower
             float rms = Mathf.Sqrt((float)(sum / n));
             LevelDb = 20f * Mathf.Log10(Mathf.Max(rms, 1e-5f));
 
-            float dt = Time.unscaledDeltaTime;
-            if (Time.unscaledTime < _warmUntil)
-            {
-                // Learn the room for the first second before reporting anything.
-                _floorDb = Mathf.Lerp(_floorDb, LevelDb, 1f - Mathf.Exp(-dt * 8f));
-                return 0f;
-            }
-            // Noise floor: drops quickly to quiet moments and creeps up slowly, so a long breath doesn't become
-            // "the room" but a fan switched on does, after a few seconds.
-            _floorDb = LevelDb < _floorDb ? Mathf.Lerp(_floorDb, LevelDb, 1f - Mathf.Exp(-dt * 4f))
-                                          : _floorDb + Mathf.Min(LevelDb - _floorDb, 2f * dt);
-            _floorDb = Mathf.Clamp(_floorDb, -90f, -20f);
+            UpdateFloor();
+            if (Time.unscaledTime < _warmUntil) return 0f;   // learn the room for the first second
 
             if (LevelDb < absoluteMinDb) return 0f;
             float above = LevelDb - _floorDb;
             return Mathf.Clamp01(Mathf.InverseLerp(thresholdAboveFloorDb, fullAboveFloorDb, above));
+        }
+
+        /// <summary>
+        /// Room noise = a low percentile of the last few seconds of levels. A brief silence barely moves it (unlike
+        /// tracking the minimum), and steady background noise becomes the floor within a few seconds.
+        /// </summary>
+        void UpdateFloor()
+        {
+            float now = Time.unscaledTime;
+            if (now < _nextHistory) return;
+            _nextHistory = now + 1f / HistoryRate;
+            int capacity = Mathf.Clamp(Mathf.RoundToInt(floorWindowSeconds * HistoryRate), 8, _history.Length);
+            _history[_historyHead] = LevelDb;
+            _historyHead = (_historyHead + 1) % capacity;
+            _historyCount = Mathf.Min(_historyCount + 1, capacity);
+            System.Array.Copy(_history, _sorted, _historyCount);
+            System.Array.Sort(_sorted, 0, _historyCount);
+            _floorDb = Mathf.Clamp(_sorted[Mathf.FloorToInt(floorPercentile * (_historyCount - 1))], -90f, -20f);
         }
 
         bool KeyHeld()

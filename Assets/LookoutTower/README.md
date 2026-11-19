@@ -44,6 +44,29 @@ cab puzzles. A wrong code shows *Denied* and clears.
   controller trigger through `XRInteractBridge`. The asset's own `KeypadInteractionFPV` isn't used: it reads the
   legacy Input Manager, and this project runs the Input System only.
 
+### Fire finder puzzle (digit 7)
+
+A dispatch note on the logbook says smoke was reported and circled on the wall map (south wall). The player finds
+the circle (the north arm of the big lake, east-south-east of the tower triangle), then turns the fire finder sight (**E** /
+trigger, 15° a press) until the sight's line runs over the same spot on the finder's table map: **105°**. While the
+sight is on that bearing, the ranger's lamp on a radio mast ~90 m out along it signals the digit and its place in the
+hatch code: **2 slow flashes** (the 2nd digit), a gap, **7 quick flashes** (the digit), a long pause, and repeat. Nothing
+in the cab explains the pattern: working out that the slow flashes are the position is part of the puzzle (the slow
+flashes are a little dimmer and warmer to help them read as a separate group). Other puzzles can give their digit's
+place the same way.
+
+- `FireFinderSighting` (on `Prop_FireFinder`): `targetBearing` (true north, clockwise), `tolerance`, `CurrentBearing`,
+  `IsAligned`, `onAligned` / `onMisaligned`. Change the bearing on the **Prop_FireFinder prefab**: Build Everything
+  keeps it and moves the map circle and the lamp to match (keep it a multiple of 15°, and check the circle still lands
+  somewhere sensible on the map).
+- `SightingBeacon` (scene, `Sighting Beacon (ranger's lamp)`): `slotFlashes` (code position, slow) and `flashes`
+  (the digit, quick), set by the builder from `SmokeCodeSlot` / `SmokeCodeDigit`; `slowOn` / `slowOff`, `groupGap`,
+  `onTime` / `offTime`, `pause`, `slowTint` / `slowBrightness`; `IsLit` / `IsSlowFlash`; `alwaysOn` for testing. Its glow
+  uses the fog-free `LookoutTower/BeaconGlow` shader, so it reads through the night haze; trees and walls still hide it.
+  Build Everything keeps a 5 m-wide corridor of the forest clear between the cab and the lamp.
+- The table map on the fire finder is turned (UVs, `Prefabs/Props/FireFinder_NorthUp.asset`) so north is up and it
+  matches the wall map.
+
 Route: walk in through the open south face of the tower, take the switchback stairs, then the steep last
 flight up to the trapdoor in the cab floor (look up at it and press **E** to open it). The cab door opens
 onto the catwalk.

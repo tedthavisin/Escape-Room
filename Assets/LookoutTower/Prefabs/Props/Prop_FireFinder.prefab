@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 9079212020063113492}
   - component: {fileID: 4713992077450516034}
   - component: {fileID: 4985867324296051561}
+  - component: {fileID: 5679121389350140083}
   m_Layer: 0
   m_Name: Prop_FireFinder
   m_TagString: Untagged
@@ -77,6 +78,29 @@ MonoBehaviour:
   onTurned:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &5679121389350140083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210914039888012180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3526d8ca5dcaee4ab5fb344f9255d7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LookoutTower.FireFinderSighting
+  turn: {fileID: 4985867324296051561}
+  sight: {fileID: 3443194574410017806}
+  sightFrontLocal: {x: 0, y: 0, z: 1}
+  targetBearing: 105
+  tolerance: 3
+  onAligned:
+    m_PersistentCalls:
+      m_Calls: []
+  onMisaligned:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &3150395400238319832
 GameObject:
   m_ObjectHideFlags: 0
@@ -118,7 +142,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3150395400238319832}
-  m_Mesh: {fileID: 285715870060467122, guid: 93bbb63ad5c3842fa82c93558c65c3b3, type: 3}
+  m_Mesh: {fileID: 4300000, guid: caf90ba9e2de51f448fa05f899456da7, type: 2}
 --- !u!23 &5045383535006293968
 MeshRenderer:
   m_ObjectHideFlags: 0

@@ -1687,6 +1687,8 @@ namespace LookoutTower.EditorTools
             ex.cabSpawn = cabSpawn;
             ex.allowCabTeleport = false;   // T would skip the hatch lock; tick it on the player to test
 
+            GorillaEasterEgg.AddToScene(tower.transform);   // easter egg on the catwalk rail (GorillaEasterEgg.cs)
+
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
             var scenes = EditorBuildSettings.scenes.ToList();

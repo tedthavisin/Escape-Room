@@ -92,7 +92,7 @@ namespace LookoutTower.EditorTools
 
             // paper rustle as you step up to a note
             var paper = SoundCue.Of(Clip("paper_handling"), 12.8f, 1.5f, 0.45f, 1f, 0.06f);
-            foreach (var name in new[] { "Note_FogHint", "DispatchNote" })
+            foreach (var name in new[] { "Note_FogHint", "DispatchNote", "Note_MorseGuide" })
             {
                 var t = FindChild(root.transform, name);
                 if (t == null) continue;

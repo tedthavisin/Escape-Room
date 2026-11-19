@@ -1285,7 +1285,7 @@ namespace LookoutTower.EditorTools
 
             // fuse box puzzle (Models/FuseBox.fbx, see FuseBoxPuzzleBuilder); skipped if the model isn't in the project
             FuseBoxPuzzleBuilder.AttachToTower(root);
-
+            GameAudioSetup.ApplyToTower(root);        // door/window/fire finder/fog/note sounds
             var prefab = SavePrefab(root, TowerPrefabPath);
             Object.DestroyImmediate(root);
             return prefab;
@@ -1690,6 +1690,8 @@ namespace LookoutTower.EditorTools
             ex.cabSpawn = cabSpawn;
             ex.allowCabTeleport = false;   // T would skip the hatch lock; tick it on the player to test
 
+            GameAudioSetup.ApplyToScene(scene);       // escape timer, wrist display, night ambience
+            GorillaEasterEgg.AddToScene(tower.transform);   // easter egg on the catwalk rail (GorillaEasterEgg.cs)
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
             var scenes = EditorBuildSettings.scenes.ToList();

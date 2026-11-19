@@ -16,6 +16,11 @@ namespace LookoutTower
         public float speed = 180f;
         public string prompt = "Turn the sight";
 
+        [Tooltip("Plays each time it's turned a step.")]
+        public SoundCue turnSound;
+        [Tooltip("Random section of the turn sound's clip to start from, so steps vary (seconds; 0 = always the cue's start).")]
+        public float turnSoundSpread;
+
         public UnityEvent<float> onTurned = new UnityEvent<float>();
 
         Quaternion _start;
@@ -33,6 +38,12 @@ namespace LookoutTower
         public void Interact()
         {
             _angle += stepDegrees;
+            if (turnSound.IsSet)
+            {
+                var cue = turnSound;
+                cue.start += Random.Range(0f, turnSoundSpread);
+                Sfx.Play(cue, target.position, 1f, 12f);
+            }
             onTurned.Invoke(CurrentAngle);
         }
 

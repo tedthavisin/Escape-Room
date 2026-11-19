@@ -32,6 +32,8 @@ namespace LookoutTower
         [Tooltip("Lowest the body will squash down to when ducking under something automatically.")]
         public float minHeight = 0.9f;
         public float eyeBelowTop = 0.15f;
+        /// <summary>Set by something else that moves the body (the gorilla easter egg): look, crouch and E still work here, walking and gravity don't.</summary>
+        [System.NonSerialized] public bool externalMovement;
 
         CharacterController _cc;
         float _pitch, _vy;
@@ -79,13 +81,17 @@ namespace LookoutTower
             cam.transform.localPosition = new Vector3(0f, _cc.height - eyeBelowTop, 0f);
             cam.transform.localEulerAngles = new Vector3(_pitch, 0f, 0f);
 
-            Vector2 mv = MoveInput();
-            float spd = _crouch ? crouchSpeed : (Held(Key.LeftShift) ? sprintSpeed : walkSpeed);
-            Vector3 move = (transform.right * mv.x + transform.forward * mv.y) * spd;
-            if (_cc.isGrounded && _vy < 0f) _vy = -2f;
-            _vy += gravity * Time.deltaTime;
-            move.y = _vy;
-            _cc.Move(move * Time.deltaTime);
+            if (!externalMovement)
+            {
+                Vector2 mv = MoveInput();
+                float spd = _crouch ? crouchSpeed : (Held(Key.LeftShift) ? sprintSpeed : walkSpeed);
+                Vector3 move = (transform.right * mv.x + transform.forward * mv.y) * spd;
+                if (_cc.isGrounded && _vy < 0f) _vy = -2f;
+                _vy += gravity * Time.deltaTime;
+                move.y = _vy;
+                _cc.Move(move * Time.deltaTime);
+            }
+            else _vy = 0f;
 
             UpdateFocus();
             if (Pressed(Key.E) && _focus != null)

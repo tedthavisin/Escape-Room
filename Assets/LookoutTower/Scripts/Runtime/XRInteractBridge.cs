@@ -59,6 +59,14 @@ namespace LookoutTower
         {
             if (hand == null) return;
             var ray = new Ray(hand.position, hand.forward);
+            // While the win screen is up only its panel is drawn, so aim only at the panel: the (now invisible) tower
+            // can sit between a player on the ladder and the Play Again button.
+            if (WinScreen.Showing != null)
+            {
+                if (Physics.Raycast(ray, out var uiHit, reach, 1 << WinScreen.Showing.PanelLayer, QueryTriggerInteraction.Ignore))
+                    uiHit.collider.GetComponentInParent<IInteractable>()?.Interact();
+                return;
+            }
             // forgiving aim, never through walls; skips the rig's own CharacterController/body
             var target = InteractionPicker.Pick(ray, reach, 0.08f, rigRoot);
             if (target == null) return;

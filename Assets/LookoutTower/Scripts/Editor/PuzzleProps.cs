@@ -7,8 +7,9 @@ namespace LookoutTower.EditorTools
 {
     /// <summary>
     /// Builds the escape-room puzzle props (prefabs under Prefabs/Puzzles) and keeps them in the tower prefab's
-    /// "Puzzles" group. Build Everything regenerates the tower prefab, so it snapshots that group first and puts every
-    /// prefab instance in it back where a designer left it.
+    /// "Puzzles" group, which it shares with other puzzle pieces such as the hatch keypad. Build Everything regenerates
+    /// the tower prefab, so it snapshots this code's props first and puts each back where a designer left it. It only
+    /// ever touches instances of prefabs in Prefabs/Puzzles; anything else in the group is left alone.
     /// </summary>
     public static class PuzzleProps
     {
@@ -31,8 +32,10 @@ namespace LookoutTower.EditorTools
             var root = PrefabUtility.LoadPrefabContents(LookoutTowerBuilder.TowerPrefabPath);
             try
             {
-                var group = root.transform.Find(GroupName);
-                if (group != null) Object.DestroyImmediate(group.gameObject);
+                // reset placement: drop only our own props, keep the rest of the group (e.g. the hatch keypad)
+                var group = Group(root.transform);
+                for (int i = group.childCount - 1; i >= 0; i--)
+                    if (IsOurProp(group.GetChild(i), out _)) Object.DestroyImmediate(group.GetChild(i).gameObject);
                 Restore(root.transform, new List<Placed>());
                 PrefabUtility.SaveAsPrefabAsset(root, LookoutTowerBuilder.TowerPrefabPath);
             }
@@ -178,31 +181,29 @@ namespace LookoutTower.EditorTools
             public Quaternion rotation;
         }
 
-        /// <summary>Prefab instances in the current tower prefab's Puzzles group, with their poses.</summary>
+        /// <summary>Instances of our props (prefabs in Prefabs/Puzzles) in the current tower prefab, with their poses.</summary>
         public static List<Placed> Capture()
         {
             var list = new List<Placed>();
             var tower = AssetDatabase.LoadAssetAtPath<GameObject>(LookoutTowerBuilder.TowerPrefabPath);
-            var group = tower != null ? tower.transform.Find(GroupName) : null;
-            if (group == null) return list;
-            foreach (Transform t in group)
+            if (tower == null) return list;
+            foreach (Transform g in tower.transform)
             {
-                var src = PrefabUtility.GetCorrespondingObjectFromSource(t.gameObject);
-                string path = src != null ? AssetDatabase.GetAssetPath(src) : null;
-                if (string.IsNullOrEmpty(path)) continue;
-                list.Add(new Placed { assetPath = path, name = t.name, position = t.localPosition, rotation = t.localRotation, scale = t.localScale });
+                if (g.name != GroupName) continue;              // older prefabs can have more than one group
+                foreach (Transform t in g)
+                    if (IsOurProp(t, out string path))
+                        list.Add(new Placed { assetPath = path, name = t.name, position = t.localPosition, rotation = t.localRotation, scale = t.localScale });
             }
             return list;
         }
 
         /// <summary>
-        /// Recreates the Puzzles group under <paramref name="towerRoot"/>, adding any default prop that isn't in
-        /// <paramref name="placed"/> yet (first build, or a prop added since the last one).
+        /// Puts our props into the Puzzles group under <paramref name="towerRoot"/> (sharing it if it already exists),
+        /// adding any default prop that isn't in <paramref name="placed"/> yet (first build, or a prop added since).
         /// </summary>
         public static void Restore(Transform towerRoot, List<Placed> placed)
         {
-            var group = new GameObject(GroupName).transform;
-            group.SetParent(towerRoot, false);
+            var group = Group(towerRoot);
 
             if (AssetDatabase.LoadAssetAtPath<GameObject>(FogHintNotePath) == null) BuildFogHintNote();
             if (AssetDatabase.LoadAssetAtPath<GameObject>(CompassPath) == null) BuildCompass();
@@ -218,6 +219,38 @@ namespace LookoutTower.EditorTools
                 inst.transform.localRotation = p.rotation;
                 inst.transform.localScale = p.scale;
             }
+        }
+
+        /// <summary>
+        /// The tower's one Puzzles group: created if missing; if a merge left several, their children are moved into
+        /// the first and the extras removed.
+        /// </summary>
+        static Transform Group(Transform towerRoot)
+        {
+            Transform group = null;
+            var extras = new List<Transform>();
+            foreach (Transform c in towerRoot)
+                if (c.name == GroupName) { if (group == null) group = c; else extras.Add(c); }
+            if (group == null)
+            {
+                group = new GameObject(GroupName).transform;
+                group.SetParent(towerRoot, false);
+            }
+            foreach (var e in extras)
+            {
+                while (e.childCount > 0) e.GetChild(0).SetParent(group, false);   // all groups sit at the tower origin
+                Object.DestroyImmediate(e.gameObject);
+            }
+            return group;
+        }
+
+        static bool IsOurProp(Transform t, out string assetPath)
+        {
+            assetPath = null;
+            if (!PrefabUtility.IsOutermostPrefabInstanceRoot(t.gameObject)) return false;
+            var src = PrefabUtility.GetCorrespondingObjectFromSource(t.gameObject);
+            assetPath = src != null ? AssetDatabase.GetAssetPath(src) : null;
+            return !string.IsNullOrEmpty(assetPath) && assetPath.StartsWith(PuzzleDir + "/");
         }
 
         /// <summary>

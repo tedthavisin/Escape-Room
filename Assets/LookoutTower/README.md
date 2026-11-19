@@ -21,11 +21,28 @@ Re-running the build updates everything in place.
 
 ## Walk around (desktop, before the VR rig)
 
-Open the scene and press Play.
+Open the scene and press Play. The player starts **locked in the cab** (at `Markers/CabSpawn`), facing the hatch keypad.
 
 - **WASD** walk, **mouse** look, **Shift** sprint, **C** crouch (you also duck automatically under anything low)
-- **E** open/close doors, the trapdoor and windows, or turn the fire finder sight
-- **F** flashlight, **T** teleport between the path and the cab, **Esc** frees the cursor
+- **E** open/close doors, the trapdoor and windows, turn the fire finder sight, or press a keypad button
+- **F** flashlight, **Esc** frees the cursor
+- **T** teleport between where you started and the cab: off in the escape room (it skips the hatch lock).
+  Tick `allowCabTeleport` on the player's `DesktopExplorer` to use it while testing.
+
+### Stair hatch keypad (the way out)
+
+The trapdoor in the cab floor is locked. A keypad on a post just west of the hatch
+(`Puzzles/HatchKeypad` in the tower prefab) opens it: enter **1789** and press Enter. The digits come from the
+cab puzzles. A wrong code shows *Denied* and clears.
+
+- Change the code on the **tower prefab's** keypad (`Keypad` component, `keypadCombo`), not on the scene instance.
+  Build Everything keeps the prefab's code, and also keeps the keypad where you moved it, unless the builder's
+  default placement changes (`HatchKeypadLayout`).
+- `HatchKeypadLock` (on `HatchKeypad`) locks the trapdoor on start and, when the keypad grants access, unlocks it
+  and swings it open (`openOnUnlock`). Listen to `onUnlocked`, or call `Unlock()` for a hint or a debug skip.
+- Buttons carry `KeypadButtonInteract` (an `IInteractable`), so they work with **E** on the desktop and with the
+  controller trigger through `XRInteractBridge`. The asset's own `KeypadInteractionFPV` isn't used: it reads the
+  legacy Input Manager, and this project runs the Input System only.
 
 Route: walk in through the open south face of the tower, take the switchback stairs, then the steep last
 flight up to the trapdoor in the cab floor (look up at it and press **E** to open it). The cab door opens
@@ -88,8 +105,9 @@ trapdoor.Unlock(); trapdoor.Open();    // e.g. when a puzzle is solved
   - Reach is 0.5 m from the mouth, so the desktop explorer works standing at the wall; in VR players lean in.
   - Move the writing with `writingCentre` / `digitHeight` (the gizmo shows the area when the window is selected);
     after moving the component to another window, use *Fit To Glass* from its context menu.
-- **Puzzle props** live in the tower prefab's `Puzzles` group. Build Everything puts every prefab instance in that
-  group back where you left it, so add new puzzle props there. `Tools ▸ Lookout Tower ▸ Build Puzzle Props`
+- **Puzzle props** live in the tower prefab's `Puzzles` group, alongside the hatch keypad. Build Everything puts
+  each instance of a prefab from `Prefabs/Puzzles/` back where you left it (the keypad has its own rebuild code),
+  so add new puzzle props there. `Tools ▸ Lookout Tower ▸ Build Puzzle Props`
   regenerates the props in `Prefabs/Puzzles/` (the note's text is in `PuzzleProps.cs`) and resets their placement.
   A rebuild also adds back any default prop (the note, the compass) missing from the group.
 - Anything implementing `IInteractable` (`Prompt`, `Interact()`) works with the desktop explorer, and a

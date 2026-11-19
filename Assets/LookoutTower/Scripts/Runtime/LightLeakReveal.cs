@@ -29,6 +29,21 @@ namespace LookoutTower
         [Tooltip("Horizontal swing axis, in the pendant's parent space.")]
         public Vector3 swingAxis = new Vector3(1f, 0f, 0.35f);
 
+        [Header("Pattern (drawn at start; untick to use the baked texture)")]
+        public bool drawPattern = true;
+        [Tooltip("What the pinholes spell, one dot-matrix character each ('_' is a dash).")]
+        public string code = "___9";
+        [Tooltip("Hole spacing on the ceiling, metres. 0.04 makes each character ~28 cm tall.")]
+        public float pitch = 0.04f;
+        [Tooltip("Size of the patch of ceiling the pattern covers (the shade's shadow pool), metres.")]
+        public Vector2 size = new Vector2(1.5f, 0.62f);
+        [Tooltip("Where the patch is centred from the lamp (x, z metres): west of the lights conduit so it can't cross the digits.")]
+        public Vector2 offsetFromLamp = new Vector2(-0.25f, -0.45f);
+        [Tooltip("World directions the code reads left-to-right and bottom-to-top for someone under it facing north (turned round from the fuse box).")]
+        public Vector3 readRight = Vector3.right, readUp = Vector3.back;
+        [Tooltip("How dark the shade's shadow around the dots is. Gives them contrast where the lamp lights the ceiling (no lamp shadows on Quest).")]
+        [Range(0f, 1f)] public float shadeShadow = 0.8f;
+
         [Header("Timing")]
         [Tooltip("Seconds after the solve before the surge, so the lamp's own power-up flicker plays first.")]
         public float delay = 0.75f;
@@ -65,6 +80,7 @@ namespace LookoutTower
             {
                 leak.enabled = false;
                 PrepareForQuest(leak);
+                if (drawPattern) DrawPattern();
                 _mpb = new MaterialPropertyBlock();
                 _leakPlaneY = leak.transform.position.y;
                 if (lamp != null) _leakDirLocal = lamp.transform.InverseTransformDirection(leak.transform.position - lamp.transform.position);
@@ -119,7 +135,8 @@ namespace LookoutTower
                 leak.enabled = lampOn && k > 0.001f;
                 if (leak.enabled)
                 {
-                    _mpb.SetColor(BaseColorId, leakColor * k);
+                    // alpha-blended pattern: fade the whole thing (shadow and dots); additive baked one: scale the light
+                    _mpb.SetColor(BaseColorId, _blended ? new Color(leakColor.r, leakColor.g, leakColor.b, Mathf.Clamp01(k)) : leakColor * k);
                     leak.SetPropertyBlock(_mpb);
                 }
             }
@@ -149,6 +166,53 @@ namespace LookoutTower
                 _hinted = true;
                 PuzzleHints.Show(hint);
             }
+        }
+
+        bool _blended;
+        Texture2D _patternTex;
+        Material _patternMat;
+
+        /// <summary>
+        /// Resizes the decal and draws the pinhole code on it (<see cref="LightLeakPattern"/>): bigger dots than the baked
+        /// texture, inside a dark pool for the shade's shadow, alpha-blended so the pool darkens the lamp-lit ceiling.
+        /// </summary>
+        void DrawPattern()
+        {
+            var t = leak.transform;
+            if (lamp != null)
+            {
+                var p = lamp.transform.position;
+                t.position = new Vector3(p.x + offsetFromLamp.x, t.position.y, p.z + offsetFromLamp.y);
+            }
+            Vector3 parentScale = t.parent != null ? t.parent.lossyScale : Vector3.one;
+            t.localScale = new Vector3(size.x / parentScale.x, size.y / parentScale.y, 1f);
+
+            const int W = 512, H = 256;
+            _patternTex = new Texture2D(W, H, TextureFormat.RGBA32, true, true)
+            {
+                name = "Light Leak Pattern",
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Trilinear,
+                anisoLevel = 4,   // read at a slant from below
+            };
+            _patternTex.SetPixels32(LightLeakPattern.Render(t, readRight, readUp, code, pitch, W, H, shadeShadow));
+            _patternTex.Apply(true, true);
+
+            _patternMat = new Material(leak.sharedMaterial) { name = "M_LightLeak (pattern)" };
+            _patternMat.SetTexture("_BaseMap", _patternTex);
+            _patternMat.SetFloat("_Blend", 0f);   // alpha
+            _patternMat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            _patternMat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            _patternMat.SetFloat("_SrcBlendAlpha", (float)UnityEngine.Rendering.BlendMode.One);
+            _patternMat.SetFloat("_DstBlendAlpha", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            leak.sharedMaterial = _patternMat;
+            _blended = true;
+        }
+
+        void OnDestroy()
+        {
+            if (_patternMat != null) Destroy(_patternMat);
+            if (_patternTex != null) Destroy(_patternTex);
         }
 
         /// <summary>

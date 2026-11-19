@@ -36,6 +36,11 @@ namespace LookoutTower
         public Vector3 mouthOffset = new Vector3(0f, -0.09f, 0.07f);
         [Tooltip("How far from the glass (metres) breath still reaches it.")]
         public float reach = 0.5f;
+        [Tooltip("Fog the glass just by leaning in close and facing it (within reach), no microphone needed. The mic, when it " +
+                 "hears you, still fogs it faster.")]
+        public bool fogByProximity = true;
+        [Tooltip("Breath strength from leaning in (0..1): this right at the glass, half of it at the edge of reach.")]
+        [Range(0f, 1f)] public float proximityBreath = 0.8f;
         [Tooltip("Fog build-up per second at full breath, right at the glass and at the edge of reach.")]
         public float buildRateNear = 1.6f, buildRateFar = 0.5f;
         [Tooltip("Radius of the breath patch (metres), right at the glass and at the edge of reach.")]
@@ -227,10 +232,16 @@ namespace LookoutTower
             float dt = Time.deltaTime;
             IsBeingBreathedOn = false;
 
-            if (_sensor != null && _sensor.Intensity > 0.01f && TryGetBreathPoint(out Vector2 hit, out float dist))
+            float micBreath = _sensor != null ? _sensor.Intensity : 0f;
+            float breath = 0f;
+            Vector2 hit = default;
+            float dist = 0f;
+            if ((micBreath > 0.01f || fogByProximity) && TryGetBreathPoint(out hit, out dist))
+                breath = Breath(micBreath, dist);
+            if (breath > 0.01f)
             {
                 float k = Mathf.Clamp01(dist / reach);
-                float rate = Mathf.Lerp(buildRateNear, buildRateFar, k) * _sensor.Intensity;
+                float rate = Mathf.Lerp(buildRateNear, buildRateFar, k) * breath;
                 float sigma = Mathf.Lerp(spreadNear, spreadFar, k);
                 float inv2s2 = 1f / (2f * sigma * sigma);
                 float cutoff2 = 9f * sigma * sigma;
@@ -276,6 +287,14 @@ namespace LookoutTower
                 _dirty = false;
                 UploadTexture();
             }
+        }
+
+        /// <summary>How hard breath reaches the glass: the mic's reading, or (fogByProximity) just being close, whichever is stronger.</summary>
+        float Breath(float micBreath, float dist)
+        {
+            if (!fogByProximity) return micBreath;
+            float near = proximityBreath * Mathf.Lerp(1f, 0.5f, Mathf.Clamp01(dist / reach));
+            return Mathf.Max(micBreath, near);
         }
 
         float CellX(int i) => -glassSize.x * 0.5f + i * glassSize.x / (_gw - 1);

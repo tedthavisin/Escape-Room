@@ -112,11 +112,7 @@ namespace LookoutTower
                 _permissionAsked = true;
                 var cb = new PermissionCallbacks();
                 cb.PermissionGranted += _ => TryStartMic();
-                cb.PermissionDenied += _ =>
-                {
-                    Debug.LogWarning("[LookoutTower] Microphone permission denied; breath puzzles fall back to the keyboard key.");
-                    PuzzleHints.Show("Microphone access is off, so your breath can't fog the windows. Allow it in the headset's app permissions.");
-                };
+                cb.PermissionDenied += _ => Debug.LogWarning("[LookoutTower] Microphone permission denied; the fog window still fogs when you lean in close.");
                 Permission.RequestUserPermission(Permission.Microphone, cb);
                 return;
             }
